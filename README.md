@@ -83,7 +83,17 @@ Set `SEED_ADMIN_PASSWORD` / `SEED_ANALYST_PASSWORD` / `SEED_VIEWER_PASSWORD` bef
 
 ### About the demo data
 
-Live scraping requires network access to NSE/BSE, which many sandboxes (including CI) block; sources that deny automated access are marked **unavailable** — the system never bypasses anti-bot controls. So the seed populates the pipeline through three **clearly-labelled fictional demo sources** (fictional companies, badged `demo` throughout the UI and flagged in exports). They exercise every real code path: multi-source agreement, a deliberate one-day discrepancy, calculation-only dates, a low-confidence extraction, and expired events. Disable them on the Sources page once real sources are reachable in your deployment.
+Live scraping requires network access to the source websites, which many sandboxes (including CI) block; sources that deny automated access are marked **unavailable** — the system never bypasses anti-bot controls. So the seed populates the pipeline through three **clearly-labelled fictional demo sources** (fictional companies, badged `demo` throughout the UI and flagged in exports). They exercise every real code path: multi-source agreement, a deliberate one-day discrepancy, calculation-only dates, a low-confidence extraction, and expired events. Disable them on the Sources page once real sources are reachable in your deployment.
+
+### Live sources
+
+Three live adapters ship with the app: **NSE India** and **BSE India** (Tier 1) and **Chittorgarh** (Tier 3 IPO research portal, which publishes anchor lock-in end dates per IPO). Whether each works depends on the network you run from — the exchanges block most automated access; Chittorgarh is typically reachable from a residential connection. Each adapter checks the site's robots.txt at runtime, rate-limits itself (~1 request/1.5s, capped detail pages per sync), and marks the source unavailable rather than working around a block. Run a sync from the command line with:
+
+```bash
+npx tsx scripts/sync-once.ts
+```
+
+(uses `DATABASE_URL` from `.env`, so pointing it at your production database refreshes the hosted deployment too).
 
 ## Running things
 

@@ -28,26 +28,37 @@ export async function reverifyEvent(
   });
   if (!event) return null;
 
-  const startIso = toIso(event.startDate) ?? opts?.fallbackStartDate ?? toIso(event.ipo.listingDate);
+  let rule: LockInRule | null = null;
+  if (event.lockInPeriod && event.periodUnit) {
+    rule = {
+      startDateField: "explicit",
+      period: event.lockInPeriod,
+      unit: event.periodUnit,
+      ruleText: event.ruleText ?? "Period as stated by source",
+    };
+  } else if (DEFAULT_LOCK_IN_RULES[event.category]) {
+    rule = DEFAULT_LOCK_IN_RULES[event.category];
+  }
+
+  // Start date: what the source stated, or the sync's allotment context.
+  // Listing date is used only for rules that actually run from listing —
+  // anchor/promoter rules run from ALLOTMENT, and calculating them from the
+  // listing date would produce a wrong date and false mismatch flags. When
+  // the correct anchor date is unknown, the calculation is skipped (never
+  // guessed) and published dates stand on their own.
+  let startIso = toIso(event.startDate) ?? opts?.fallbackStartDate ?? null;
+  if (!startIso && rule?.startDateField === "listing_date") {
+    startIso = toIso(event.ipo.listingDate);
+  }
+
   let calculated: string | null = null;
   let calcMethod: string | null = null;
-  if (startIso) {
-    let rule: LockInRule | null = null;
-    if (event.lockInPeriod && event.periodUnit) {
-      rule = {
-        startDateField: "explicit",
-        period: event.lockInPeriod,
-        unit: event.periodUnit,
-        ruleText: event.ruleText ?? "Period as stated by source",
-      };
-    } else if (DEFAULT_LOCK_IN_RULES[event.category]) {
-      rule = DEFAULT_LOCK_IN_RULES[event.category];
-    }
-    if (rule) {
-      const res = calculateExpiry(startIso, rule);
-      calculated = res.calculatedExpiryDate;
-      calcMethod = `${startIso} + ${res.lockInPeriod}`;
-    }
+  if (rule && startIso) {
+    const res = calculateExpiry(startIso, rule);
+    calculated = res.calculatedExpiryDate;
+    calcMethod = `${startIso} + ${res.lockInPeriod}`;
+  } else if (rule && !startIso) {
+    calcMethod = `skipped — ${rule.startDateField} unknown (calculation would use the wrong anchor date)`;
   }
 
   // Only the most recent record per source participates in cross-checking.

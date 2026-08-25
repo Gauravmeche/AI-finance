@@ -15,6 +15,7 @@ const prisma = new PrismaClient();
 const SOURCES = [
   { name: "NSE India", domain: "nseindia.com", sourceType: "exchange", tier: "TIER1_PRIMARY", priority: 10, adapterKey: "nse", scrapeMethod: "api" },
   { name: "BSE India", domain: "bseindia.com", sourceType: "exchange", tier: "TIER1_PRIMARY", priority: 11, adapterKey: "bse", scrapeMethod: "html" },
+  { name: "Chittorgarh", domain: "chittorgarh.com", sourceType: "ipo_research_portal", tier: "TIER3_SECONDARY", priority: 50, adapterKey: "chittorgarh", scrapeMethod: "html" },
   { name: "Demo Exchange Filings", domain: "demo-exchange.example.org", sourceType: "exchange_filing", tier: "TIER1_PRIMARY", priority: 20, adapterKey: "demo_exchange", scrapeMethod: "fixture" },
   { name: "Demo Prospectus Repository", domain: "demo-prospectus.example.org", sourceType: "prospectus", tier: "TIER1_PRIMARY", priority: 21, adapterKey: "demo_prospectus", scrapeMethod: "fixture" },
   { name: "Demo Financial Portal", domain: "demo-portal.example.org", sourceType: "financial_portal", tier: "TIER3_SECONDARY", priority: 60, adapterKey: "demo_portal", scrapeMethod: "fixture" },

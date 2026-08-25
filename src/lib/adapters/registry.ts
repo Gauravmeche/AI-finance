@@ -5,6 +5,7 @@
  */
 
 import { BSEAdapter } from "./bse";
+import { ChittorgarhAdapter } from "./chittorgarh";
 import { NSEAdapter } from "./nse";
 import { SampleAdapter } from "./sample";
 import type { SourceAdapter } from "./types";
@@ -12,6 +13,7 @@ import type { SourceAdapter } from "./types";
 const factories: Record<string, () => SourceAdapter> = {
   nse: () => new NSEAdapter(),
   bse: () => new BSEAdapter(),
+  chittorgarh: () => new ChittorgarhAdapter(),
   demo_exchange: () => new SampleAdapter("demo_exchange"),
   demo_prospectus: () => new SampleAdapter("demo_prospectus"),
   demo_portal: () => new SampleAdapter("demo_portal"),

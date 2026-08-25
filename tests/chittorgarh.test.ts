@@ -29,6 +29,50 @@ const DETAIL_FIXTURE = `
 </table>
 </body></html>`;
 
+// JSON payload fixture modeled on the webnodejs.chittorgarh.com report API.
+const JSON_FIXTURE = JSON.stringify({
+  curpg: 1,
+  reportTableData: [
+    {
+      Sr: 1,
+      "Issuer Company": '<a href="/ipo/sunrise-agro-ipo/1234/" title="Sunrise Agro IPO">Sunrise Agro Ltd IPO</a>',
+      "Open Date": "Aug 12, 2026",
+      "Close Date": "Aug 14, 2026",
+      "Listing Date": "Aug 20, 2026",
+      "Issue Price (Rs)": "250.00",
+      "Issue Size (Rs Cr)": "1,850.50",
+    },
+    {
+      Sr: 2,
+      "Issuer Company": '<a href="https://www.chittorgarh.com/ipo/bluepeak-metals-ipo/5678/">Bluepeak Metals Ltd IPO</a>',
+      "Open Date": "Jul 01, 2026",
+      "Close Date": "Jul 03, 2026",
+      "Listing Date": "Jul 09, 2026",
+      "Issue Price (Rs)": "92",
+      "Issue Size (Rs Cr)": "640",
+    },
+  ],
+});
+
+describe("Chittorgarh report JSON parsing (fixture)", () => {
+  it("parses reportTableData rows with dates, price, size and detail URLs", () => {
+    const rows = new ChittorgarhAdapter().parseReportJson(JSON_FIXTURE);
+    expect(rows).toHaveLength(2);
+    expect(rows[0].ipo.companyName).toBe("Sunrise Agro Ltd");
+    expect(rows[0].ipo.listingDate).toBe("2026-08-20");
+    expect(rows[0].ipo.issuePrice).toBe(250);
+    expect(rows[0].ipo.issueSizeCr).toBe(1850.5);
+    expect(rows[0].detailUrl).toBe("https://www.chittorgarh.com/ipo/sunrise-agro-ipo/1234/");
+    expect(rows[1].detailUrl).toBe("https://www.chittorgarh.com/ipo/bluepeak-metals-ipo/5678/");
+  });
+
+  it("returns nothing for non-JSON or unrecognized payloads — no fabrication", () => {
+    const adapter = new ChittorgarhAdapter();
+    expect(adapter.parseReportJson("<html>not json</html>")).toHaveLength(0);
+    expect(adapter.parseReportJson(JSON.stringify({ foo: [1, 2, 3] }))).toHaveLength(0);
+  });
+});
+
 describe("Chittorgarh list page parsing (fixture)", () => {
   it("parses IPO rows with dates, price and size; skips ad rows", () => {
     const rows = new ChittorgarhAdapter().parseListPage(LIST_FIXTURE);
@@ -72,6 +116,18 @@ describe("Chittorgarh detail page anchor lock-in extraction (fixture)", () => {
       ipo,
     );
     expect(obs).toHaveLength(0);
+  });
+
+  it("extracts anchor end dates from non-table free text", () => {
+    const obs = adapter.parseDetailPage(
+      `<html><body><div>Anchor lock-in period end date (30 days) Sep 17, 2026</div>
+       <div>Anchor lock-in period end date (90 days): Nov 16, 2026</div></body></html>`,
+      "https://example.org/detail",
+      ipo,
+    );
+    expect(obs).toHaveLength(2);
+    expect(obs.find((o) => o.category === "ANCHOR_50PCT")!.publishedExpiryDate).toBe("2026-09-17");
+    expect(obs.find((o) => o.category === "ANCHOR_REMAINING")!.publishedExpiryDate).toBe("2026-11-16");
   });
 
   it("ignores a lock-in label whose value cell has no parseable date", () => {

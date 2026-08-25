@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0e14;
+  --surface: #11161f;
+  --surface-2: #171e2a;
+  --border: #222b3a;
+  --foreground: #e6e9ef;
+  --muted: #8a94a6;
+  --accent: #4c9aff;
+  --ok: #2dd4a7;
+  --warn: #f0b429;
+  --alert: #ff8c42;
+  --danger: #f4544e;
+  --manual: #b58cf6;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-edge: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-alert: var(--alert);
+  --color-danger: var(--danger);
+  --color-manual: var(--manual);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 14px;
+}
+
+.num {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: rgba(76, 154, 255, 0.35);
+}
+
+table.term th {
+  @apply text-left text-[11px] uppercase tracking-wider text-muted font-medium px-3 py-2 border-b border-edge whitespace-nowrap;
+}
+table.term td {
+  @apply px-3 py-2 border-b border-edge/60 align-top;
+}
+table.term tbody tr:hover {
+  background: rgba(76, 154, 255, 0.05);
+}

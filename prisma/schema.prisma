@@ -1,0 +1,318 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Users & auth
+// ---------------------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  ANALYST
+  VIEWER
+}
+
+model User {
+  id           String           @id @default(cuid())
+  email        String           @unique
+  name         String
+  passwordHash String
+  role         Role             @default(VIEWER)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  overrides    ManualOverride[]
+  reviews      ReviewNote[]
+
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// Companies & IPOs
+// ---------------------------------------------------------------------------
+
+enum IpoStatus {
+  UPCOMING
+  OPEN
+  LISTED
+  WITHDRAWN
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  legalName String?
+  ticker    String?
+  isin      String?  @unique
+  exchange  String? // "NSE", "BSE", "NSE,BSE"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipos      Ipo[]
+
+  @@index([ticker])
+  @@index([name])
+  @@map("companies")
+}
+
+model Ipo {
+  id             String        @id @default(cuid())
+  companyId      String
+  company        Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  ipoName        String
+  issueOpenDate  DateTime?     @db.Date
+  issueCloseDate DateTime?     @db.Date
+  listingDate    DateTime?     @db.Date
+  issuePrice     Decimal?      @db.Decimal(12, 2)
+  listingPrice   Decimal?      @db.Decimal(12, 2)
+  issueSizeCr    Decimal?      @db.Decimal(14, 2) // issue size in ₹ crore
+  status         IpoStatus     @default(LISTED)
+  isSampleData   Boolean       @default(false) // demo/seed rows are labelled, never mixed silently with live data
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  lockInEvents   LockInEvent[]
+  sourceRecords  SourceRecord[]
+
+  @@index([listingDate])
+  @@map("ipos")
+}
+
+// ---------------------------------------------------------------------------
+// Lock-in events
+// ---------------------------------------------------------------------------
+
+enum LockInCategory {
+  ANCHOR_50PCT // anchor investors, first tranche (50% of anchor allocation)
+  ANCHOR_REMAINING // anchor investors, remaining tranche
+  PROMOTER_MINIMUM_CONTRIBUTION // promoter minimum contribution (20%)
+  PROMOTER_EXCESS // promoter holding above minimum contribution
+  PRE_IPO_SHAREHOLDER // other pre-IPO shareholders
+  EXISTING_SHAREHOLDER
+  OTHER
+}
+
+enum PeriodUnit {
+  DAYS
+  MONTHS
+  YEARS
+}
+
+enum VerificationStatus {
+  VERIFIED
+  CROSS_CHECKED
+  PRIMARY_SOURCE_ONLY
+  SECONDARY_SOURCE_ONLY
+  DATE_DISCREPANCY
+  CALCULATION_REQUIRED
+  NEEDS_REVIEW
+  SOURCE_UNAVAILABLE
+  MANUALLY_VERIFIED
+}
+
+model LockInEvent {
+  id         String         @id @default(cuid())
+  ipoId      String
+  ipo        Ipo            @relation(fields: [ipoId], references: [id], onDelete: Cascade)
+  category   LockInCategory
+  holderType String // human-readable holder description as stated in the source document
+  shares     BigInt?
+  percentage Decimal?       @db.Decimal(6, 3) // % of post-issue capital
+
+  lockInPeriod Int? // magnitude of the period
+  periodUnit   PeriodUnit?
+  startDate    DateTime?   @db.Date
+
+  // RAW / CALCULATED / PUBLISHED / OVERRIDE / FINAL are kept separate — audit trail
+  calculatedExpiryDate DateTime? @db.Date
+  publishedExpiryDate  DateTime? @db.Date
+  finalExpiryDate      DateTime? @db.Date
+  calculationMethod    String? // e.g. "listing_date + 90 days"
+
+  verificationStatus VerificationStatus @default(NEEDS_REVIEW)
+  confidenceScore    Int? // 0-100, explainable; null until first verification pass
+  confidenceFactors  Json? // [{factor, points, met, detail}]
+  ruleText           String? // the actual rule as stated in regulatory/IPO documentation
+  notes              String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sourceRecords       SourceRecord[]
+  verificationResults VerificationResult[]
+  overrides           ManualOverride[]
+  reviewNotes         ReviewNote[]
+
+  @@index([finalExpiryDate])
+  @@index([verificationStatus])
+  @@map("lock_in_events")
+}
+
+// ---------------------------------------------------------------------------
+// Sources & evidence
+// ---------------------------------------------------------------------------
+
+enum SourceTier {
+  TIER1_PRIMARY // SEBI / NSE / BSE / company filings / prospectus
+  TIER2_RELIABLE // established financial data providers
+  TIER3_SECONDARY // IPO portals, broker research, news
+}
+
+model Source {
+  id            String     @id @default(cuid())
+  name          String     @unique
+  domain        String
+  sourceType    String // "exchange", "regulator", "company_filing", "prospectus", "financial_portal", ...
+  tier          SourceTier
+  priority      Int // lower = higher authority; configurable per source
+  isActive      Boolean    @default(true)
+  adapterKey    String // which SourceAdapter implementation serves this source
+  scrapeMethod  String? // "api", "html", "pdf", "fixture"
+  lastSuccessAt DateTime?
+  lastErrorAt   DateTime?
+  lastError     String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  records       SourceRecord[]
+
+  @@map("sources")
+}
+
+model SourceRecord {
+  id               String       @id @default(cuid())
+  lockInEventId    String?
+  lockInEvent      LockInEvent? @relation(fields: [lockInEventId], references: [id], onDelete: SetNull)
+  ipoId            String?
+  ipo              Ipo?         @relation(fields: [ipoId], references: [id], onDelete: SetNull)
+  sourceId         String
+  source           Source       @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  url              String
+  documentTitle    String?
+  publishedDate    DateTime?    @db.Date
+  retrievedAt      DateTime
+  extractedValue   String? // the lock-in expiry date exactly as extracted, ISO yyyy-mm-dd
+  extractedText    String? // evidence snippet from the page/document
+  parserConfidence Decimal?     @db.Decimal(4, 3) // 0-1
+  rawEvidence      Json? // table row / structured extraction payload
+  createdAt        DateTime     @default(now())
+
+  @@index([lockInEventId])
+  @@map("source_records")
+}
+
+// Every verification pass is stored — nothing is overwritten.
+model VerificationResult {
+  id              String             @id @default(cuid())
+  lockInEventId   String
+  lockInEvent     LockInEvent        @relation(fields: [lockInEventId], references: [id], onDelete: Cascade)
+  status          VerificationStatus
+  recommendedDate DateTime?          @db.Date
+  confidenceScore Int
+  factors         Json // explainable scoring breakdown
+  comparison      Json? // per-source dates compared, incl. discrepancy details
+  createdAt       DateTime           @default(now())
+
+  @@index([lockInEventId])
+  @@map("verification_results")
+}
+
+// ---------------------------------------------------------------------------
+// Manual review workflow
+// ---------------------------------------------------------------------------
+
+model ManualOverride {
+  id                  String      @id @default(cuid())
+  lockInEventId       String
+  lockInEvent         LockInEvent @relation(fields: [lockInEventId], references: [id], onDelete: Cascade)
+  overrideDate        DateTime    @db.Date
+  reason              String
+  analystName         String
+  userId              String?
+  user                User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  supportingSourceUrl String?
+  isActive            Boolean     @default(true) // superseded overrides are deactivated, never deleted
+  createdAt           DateTime    @default(now())
+
+  @@index([lockInEventId])
+  @@map("manual_overrides")
+}
+
+model ReviewNote {
+  id            String      @id @default(cuid())
+  lockInEventId String
+  lockInEvent   LockInEvent @relation(fields: [lockInEventId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  authorName    String
+  note          String
+  createdAt     DateTime    @default(now())
+
+  @@index([lockInEventId])
+  @@map("review_notes")
+}
+
+// ---------------------------------------------------------------------------
+// Sync engine
+// ---------------------------------------------------------------------------
+
+enum SyncStatus {
+  RUNNING
+  COMPLETED
+  COMPLETED_WITH_ERRORS
+  FAILED
+}
+
+enum SyncTrigger {
+  MANUAL
+  SCHEDULED
+  API
+  INITIAL_LOAD
+}
+
+model SyncRun {
+  id                    String      @id @default(cuid())
+  trigger               SyncTrigger @default(MANUAL)
+  startedAt             DateTime    @default(now())
+  completedAt           DateTime?
+  status                SyncStatus  @default(RUNNING)
+  recordsFound          Int         @default(0)
+  recordsCreated        Int         @default(0)
+  recordsUpdated        Int         @default(0)
+  recordsFailed         Int         @default(0)
+  iposProcessed         Int         @default(0)
+  newIposFound          Int         @default(0)
+  discrepanciesDetected Int         @default(0)
+  sourcesChecked        Int         @default(0)
+  sourcesFailed         Int         @default(0)
+  progress              Json? // live step-by-step progress, polled by the UI
+  triggeredBy           String?
+  errors                SyncError[]
+
+  @@index([startedAt])
+  @@map("sync_runs")
+}
+
+model SyncError {
+  id           String   @id @default(cuid())
+  syncRunId    String
+  syncRun      SyncRun  @relation(fields: [syncRunId], references: [id], onDelete: Cascade)
+  sourceName   String
+  url          String?
+  errorType    String // "network", "blocked", "parse", "validation", "timeout"
+  errorMessage String
+  retryCount   Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@map("sync_errors")
+}
+
+// Simple key-value app configuration (stale thresholds, source hierarchy tweaks…)
+model AppConfig {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("app_config")
+}

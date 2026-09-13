@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+
+# Recorded screener fixtures are large and may contain account-specific
+# markup from a logged-in session; keep the synthetic one only.
+screener-mcp/tests/fixtures/company_*.html
+!screener-mcp/tests/fixtures/company_synthetic.html
+
+# Never commit a session cookie
+.env

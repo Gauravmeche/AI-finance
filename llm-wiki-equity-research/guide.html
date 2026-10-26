@@ -1,0 +1,892 @@
+<title>Equity Research LLM Wiki</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: sticky step rail on the left (desktop), long-form guide on the right; collapses to one column with a top progress bar on phones. */
+:root {
+  --bg: #F2F5F4;
+  --surface: #FFFFFF;
+  --ink: #15221E;
+  --muted: #586964;
+  --line: #D6DEDB;
+  --accent: #1E5D53;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #DFEDE9;
+  --note: #FFF3D1;
+  --note-line: #E7C76A;
+  --note-ink: #5E4500;
+  --warn: #9A3A2A;
+  --code-bg: #12201C;
+  --code-fg: #DCEBE5;
+  --code-dim: #8FB3A7;
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "Source Sans 3", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1412; --surface: #141D1A; --ink: #E2ECE8; --muted: #93A49E; --line: #26342F;
+    --accent: #72C4B3; --accent-ink: #0D1412; --accent-soft: #173029;
+    --note: #2A2410; --note-line: #7A6420; --note-ink: #F1D98F; --warn: #F0937F;
+    --code-bg: #08100D; --code-fg: #D4E6DF; --code-dim: #7FA497;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1412; --surface: #141D1A; --ink: #E2ECE8; --muted: #93A49E; --line: #26342F;
+  --accent: #72C4B3; --accent-ink: #0D1412; --accent-soft: #173029;
+  --note: #2A2410; --note-line: #7A6420; --note-ink: #F1D98F; --warn: #F0937F;
+  --code-bg: #08100D; --code-fg: #D4E6DF; --code-dim: #7FA497;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 17px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.45rem, 3vw, 1.85rem); font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 1.12rem; font-weight: 700; }
+p { margin: 0; }
+a { color: var(--accent); text-underline-offset: 2px; }
+code { font-family: var(--font-mono); font-size: 0.86em; background: var(--accent-soft); padding: 0.08em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
+kbd { font-family: var(--font-mono); font-size: 0.82em; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 0.35em; background: var(--surface); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.shell { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 48px; padding-block: 40px 96px; }
+@media (max-width: 900px) { .shell { grid-template-columns: minmax(0, 1fr); gap: 0; padding-block: 24px 72px; } }
+
+/* Step rail */
+.rail { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; display: flex; flex-direction: column; gap: 14px; }
+@media (max-width: 900px) { .rail { display: none; } }
+.rail-label { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.meter { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.meter > span { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.3s; }
+.meter-text { font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rail ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.rail a { display: grid; grid-template-columns: 26px 1fr; gap: 8px; align-items: baseline; padding: 5px 8px; border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 0.93rem; line-height: 1.3; }
+.rail a:hover { background: var(--accent-soft); }
+.rail a .n { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rail a.done .n { color: var(--accent); }
+.rail a.done .n::before { content: "✓"; }
+.rail a.done .n span { display: none; }
+
+.topbar { display: none; }
+@media (max-width: 900px) {
+  .topbar { display: flex; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; gap: 12px; align-items: center; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+  .topbar .meter { flex: 1; }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+}
+
+main { min-width: 0; display: flex; flex-direction: column; gap: 56px; }
+
+/* Hero */
+.hero { display: flex; flex-direction: column; gap: 18px; max-width: 760px; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.lede { font-size: 1.2rem; color: var(--muted); max-width: 64ch; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 0.92rem; color: var(--muted); }
+.facts b { color: var(--ink); font-weight: 600; }
+
+/* Setup panel */
+.setup { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 16px; }
+.setup-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline; }
+.setup-head p { color: var(--muted); font-size: 0.95rem; max-width: 60ch; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.field label { font-size: 0.8rem; font-weight: 600; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.field input, .field select { font: inherit; font-size: 1rem; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); width: 100%; }
+.seg { align-self: flex-start; display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { font: inherit; font-size: 0.95rem; padding: 8px 14px; border: 0; background: var(--bg); color: var(--ink); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+
+/* Diagram */
+.diagram { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 10px; align-items: stretch; }
+.box { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--surface); display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.box h3 { font-size: 1rem; }
+.box p { font-size: 0.9rem; color: var(--muted); }
+.box .tag { font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); }
+.box.schema { grid-column: 1 / -1; border-style: dashed; flex-direction: row; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+.arrow { align-self: center; font-family: var(--font-mono); color: var(--accent); font-size: 0.8rem; text-align: center; line-height: 1.2; }
+.arrow b { display: block; font-size: 1.4rem; }
+@media (max-width: 640px) { .diagram { grid-template-columns: 1fr; } .arrow b { transform: rotate(90deg); } }
+
+.ops { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.op { border-top: 3px solid var(--accent); padding-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.op p { font-size: 0.95rem; color: var(--muted); }
+
+/* Steps */
+.step { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 80px; }
+.step-head { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; align-items: baseline; border-top: 2px solid var(--ink); padding-top: 14px; }
+.step-num { font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
+.step-meta { grid-column: 2; font-size: 0.88rem; color: var(--muted); }
+.prose { display: flex; flex-direction: column; gap: 14px; max-width: 68ch; }
+.prose ol, .prose ul { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 8px; }
+.prose li::marker { color: var(--accent); font-weight: 700; }
+
+.plain { background: var(--note); border-left: 4px solid var(--note-line); color: var(--note-ink); border-radius: 0 8px 8px 0; padding: 12px 16px; max-width: 68ch; display: flex; flex-direction: column; gap: 6px; }
+.plain .lbl { font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
+.plain p { font-size: 0.98rem; }
+.caution { color: var(--warn); font-weight: 600; }
+
+.code { position: relative; max-width: 100%; }
+.code pre { margin: 0; background: var(--code-bg); color: var(--code-fg); font-family: var(--font-mono); font-size: 0.83rem; line-height: 1.55; padding: 16px 16px 16px; padding-top: 40px; border-radius: 10px; overflow-x: auto; white-space: pre; }
+.code pre.wrap { white-space: pre-wrap; overflow-wrap: anywhere; }
+.code .bar { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 8px 10px 0 16px; }
+.code .bar span { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--code-dim); }
+.copy { font: inherit; font-size: 0.78rem; font-weight: 600; border: 1px solid var(--code-dim); background: transparent; color: var(--code-fg); padding: 3px 10px; border-radius: 6px; cursor: pointer; }
+.copy:hover { background: var(--code-dim); color: var(--code-bg); }
+
+.done-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--accent-soft); border-radius: 8px; max-width: 68ch; cursor: pointer; font-weight: 600; }
+.done-row input { width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
+
+/* Folder explorer */
+.explorer { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+@media (max-width: 640px) { .explorer { grid-template-columns: 1fr; } }
+.tree { list-style: none; margin: 0; padding: 10px; font-family: var(--font-mono); font-size: 0.84rem; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 1px; }
+@media (max-width: 640px) { .tree { border-right: 0; border-bottom: 1px solid var(--line); } }
+.tree button { font: inherit; width: 100%; text-align: left; border: 0; background: none; color: var(--ink); padding: 4px 8px; border-radius: 5px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tree button:hover { background: var(--accent-soft); }
+.tree button[aria-current="true"] { background: var(--accent); color: var(--accent-ink); }
+.tree .d1 { padding-left: 24px; } .tree .d2 { padding-left: 42px; }
+.detail { padding: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.detail .who { font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); }
+.detail p { color: var(--muted); }
+.detail .ex { font-size: 0.92rem; }
+
+/* Tables */
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.94rem; min-width: 560px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td.k { font-weight: 600; white-space: nowrap; }
+
+.prompts { display: flex; flex-direction: column; gap: 14px; }
+.prompt-title { font-weight: 700; font-size: 0.98rem; }
+
+.glossary { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px 28px; }
+.glossary div { display: flex; flex-direction: column; gap: 2px; }
+.glossary dt { font-weight: 700; }
+.glossary dd { margin: 0; color: var(--muted); font-size: 0.95rem; }
+.footer { color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--line); padding-top: 16px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+
+<div class="topbar" aria-hidden="true"><span class="meter-text js-meter-text">0 of 13 done</span><div class="meter"><span class="js-meter"></span></div></div>
+
+<div class="shell">
+  <nav class="rail" aria-label="Steps">
+    <span class="rail-label">Your progress</span>
+    <div class="meter"><span class="js-meter"></span></div>
+    <span class="meter-text js-meter-text">0 of 13 done</span>
+    <ol id="railList"></ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <span class="eyebrow">LLM Wiki · equity research edition</span>
+      <h1>Build a research wiki on <span data-var="COMPANY">your company</span> that Claude keeps up to date</h1>
+      <p class="lede">A step-by-step setup for Andrej Karpathy's LLM Wiki idea, adapted for following one listed company. You collect filings, transcripts and news. Claude reads them and writes a linked set of notes. You read and explore those notes in Obsidian.</p>
+      <div class="facts">
+        <span><b>Time:</b> about 2 hours for setup, then 10–20 min per document</span>
+        <span><b>Cost:</b> a paid Claude plan (Pro or Max); Obsidian is free</span>
+        <span><b>Skill needed:</b> none, every click is explained</span>
+      </div>
+    </header>
+
+    <!-- SETUP PANEL -->
+    <section class="setup" aria-labelledby="setupTitle">
+      <div class="setup-head">
+        <h2 id="setupTitle" style="font-size:1.25rem">Fill this in first</h2>
+        <p>Everything below, including the files you'll copy, updates to use your company and computer. Your answers and ticks are saved in this browser only.</p>
+      </div>
+      <div class="fields">
+        <div class="field"><label for="fCompany">Company name</label><input id="fCompany" type="text" autocomplete="off" placeholder="e.g. Titan Company"></div>
+        <div class="field"><label for="fTicker">Ticker / symbol</label><input id="fTicker" type="text" autocomplete="off" placeholder="e.g. TITAN"></div>
+        <div class="field"><label for="fExchange">Where it's listed</label>
+          <select id="fExchange">
+            <option value="india">India (NSE / BSE)</option>
+            <option value="us">United States (NYSE / Nasdaq)</option>
+            <option value="other">Somewhere else</option>
+          </select>
+        </div>
+        <div class="field"><label for="fVault">Folder (vault) name</label><input id="fVault" type="text" autocomplete="off" placeholder="EquityWiki"></div>
+      </div>
+      <div class="field"><label id="osLabel">Your computer</label>
+        <div class="seg" role="group" aria-labelledby="osLabel">
+          <button type="button" id="osMac" data-os-btn="mac" aria-pressed="true">Mac</button>
+          <button type="button" id="osWin" data-os-btn="win" aria-pressed="false">Windows</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 0 -->
+    <section class="step" id="s0" data-step="0" data-title="Understand the idea">
+      <div class="step-head"><span class="step-num">00</span><h2>Understand the idea before you click anything</h2><span class="step-meta">10 minutes of reading</span></div>
+      <div class="prose">
+        <p>When you normally ask an AI about a company, it reads your documents from scratch every time and forgets everything afterwards. Ask the same question next month and it starts again from zero.</p>
+        <p>Karpathy's LLM Wiki flips this around. Each time you add a document, Claude reads it once and <strong>writes what it learned into a set of linked notes</strong>: a page on the business model, a page per competitor, a running timeline, a tracker of what management promised. The next document updates those same pages. Over time the notes get richer instead of being thrown away. In his words, the wiki is "a persistent, compounding artifact."</p>
+        <p>For equity research this is a natural fit. Analysts already keep a company file. The tedious part is keeping it current: updating the numbers after each quarter, noting where management changed its story, linking a new risk to the old ones. That bookkeeping is the part Claude does here.</p>
+      </div>
+
+      <h3>The three layers</h3>
+      <div class="diagram" role="img" aria-label="Diagram: raw sources flow into Claude, which writes the wiki, which you read in Obsidian. The schema file CLAUDE.md governs Claude.">
+        <div class="box"><span class="tag">Layer 1 · you collect</span><h3>Raw sources</h3><p>Annual reports, results, call transcripts, news. Stored as files. Never edited.</p></div>
+        <div class="arrow"><b>→</b>Claude<br>reads</div>
+        <div class="box"><span class="tag">Layer 2 · Claude writes</span><h3>The wiki</h3><p>Markdown notes: overview, segments, management, risks, timeline, all linked.</p></div>
+        <div class="arrow"><b>→</b>you<br>read</div>
+        <div class="box"><span class="tag">Your window</span><h3>Obsidian</h3><p>An app that shows those notes as clickable pages and a map of connections.</p></div>
+        <div class="box schema"><span class="tag">Layer 3 · the rulebook</span><h3>CLAUDE.md</h3><p>A file of instructions telling Claude how to organise the wiki, how to cite, and what to do when you say "ingest", "lint" or ask a question.</p></div>
+      </div>
+
+      <h3>The three things you'll ask Claude to do</h3>
+      <div class="ops">
+        <div class="op"><h3>Ingest</h3><p>"Read this new document and update the wiki." One source can touch 10–15 pages.</p></div>
+        <div class="op"><h3>Query</h3><p>"What did management say about margins over the last year?" Claude answers from the wiki, with citations. Good answers get saved as new pages.</p></div>
+        <div class="op"><h3>Lint</h3><p>"Check the wiki's health." Claude looks for contradictions, stale numbers, missing links and gaps.</p></div>
+      </div>
+      <label class="done-row"><input type="checkbox" data-done="0"> I understand the idea</label>
+    </section>
+
+    <!-- STEP 1 -->
+    <section class="step" id="s1" data-step="1" data-title="Get Claude ready">
+      <div class="step-head"><span class="step-num">01</span><h2>Get Claude ready on your computer</h2><span class="step-meta">15 minutes</span></div>
+      <div class="plain"><span class="lbl">In plain English</span><p>The normal Claude chat website can't open or save files on your computer, so it can't maintain a wiki. You need a version of Claude that can work inside a folder on your machine. That version is called <strong>Claude Code</strong>. Despite the name, you won't write any code. It is Claude with permission to read and write files in one folder you choose.</p></div>
+      <div class="prose">
+        <ol>
+          <li>Make sure you have a paid Claude plan. Go to <a href="https://claude.ai/upgrade" target="_blank" rel="noopener">claude.ai/upgrade</a>. <strong>Pro</strong> is enough to start; long annual reports use a lot of your allowance, so consider Max if you run out often.</li>
+          <li>Download the Claude desktop app from <a href="https://claude.ai/download" target="_blank" rel="noopener">claude.ai/download</a>, install it, and sign in with the same account.</li>
+          <li>Inside the app, look for the <strong>Code</strong> tab. That's where you'll point Claude at your wiki folder in Step 6. You don't need to use it yet.</li>
+        </ol>
+      </div>
+      <div class="plain"><span class="lbl">If you can't find a Code tab</span><p>App layouts change. Step 6 also shows the terminal method, which works on every computer. It looks intimidating but is three typed lines.</p></div>
+      <label class="done-row"><input type="checkbox" data-done="1"> Claude plan and desktop app are ready</label>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="step" id="s2" data-step="2" data-title="Install Obsidian">
+      <div class="step-head"><span class="step-num">02</span><h2>Install Obsidian and create your vault</h2><span class="step-meta">10 minutes</span></div>
+      <div class="plain"><span class="lbl">In plain English</span><p>Obsidian is a free note-taking app that works on plain text files stored on your computer. A <strong>vault</strong> is just a normal folder that Obsidian watches. Because the notes are ordinary files, Claude can write them and Obsidian shows them the moment they change. Karpathy's summary: "Obsidian is the IDE; the LLM is the programmer; the wiki is the codebase."</p></div>
+      <div class="prose">
+        <ol>
+          <li>Download Obsidian from <a href="https://obsidian.md/download" target="_blank" rel="noopener">obsidian.md/download</a> and install it.</li>
+          <li>Open it and choose <strong>Create new vault</strong>.</li>
+          <li>Vault name: <code data-var="VAULT">EquityWiki</code></li>
+          <li>Location: pick your <strong>Documents</strong> folder. Your vault will live at <code data-var="VAULTPATH"></code>. Write this path down; you'll need it in Step 6.</li>
+          <li>Click <strong>Create</strong>. You'll see an empty window. That's correct.</li>
+        </ol>
+      </div>
+      <div class="plain"><span class="lbl">Avoid</span><p>Don't put the vault inside iCloud Drive, OneDrive or Dropbox for now. Sync services sometimes lock files while Claude is writing them. You can add backup later (Step 12).</p></div>
+      <label class="done-row"><input type="checkbox" data-done="2"> Obsidian installed and vault created</label>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="step" id="s3" data-step="3" data-title="Set up Obsidian">
+      <div class="step-head"><span class="step-num">03</span><h2>Change four Obsidian settings</h2><span class="step-meta">10 minutes</span></div>
+      <div class="plain"><span class="lbl">In plain English</span><p>These settings make Obsidian store files where Claude expects them and use the same link style Claude will write. Settings is the gear icon in the bottom-left corner.</p></div>
+      <div class="prose">
+        <ol>
+          <li><strong>Settings → Files and links → Default location for new attachments</strong>: choose "In the folder specified below" and type <code>raw/assets</code>. <em>Why:</em> any image you paste or download lands in one predictable place Claude can look in.</li>
+          <li><strong>Settings → Files and links → Use [[Wikilinks]]</strong>: turn it on. <em>Why:</em> Claude will link pages as <code>[[business-model]]</code>; this makes Obsidian treat those as clickable links.</li>
+          <li><strong>Settings → Files and links → Automatically update internal links</strong>: turn it on. <em>Why:</em> if a page is renamed, links to it keep working.</li>
+          <li><strong>Settings → Hotkeys</strong>: search for <code>Download attachments</code> and assign <kbd data-var="MOD">Cmd</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd>. <em>Why:</em> when you clip a news article that contains charts, one key press saves the images locally so Claude can actually see them.</li>
+        </ol>
+        <p>Two built-in views you'll use constantly: <strong>Graph view</strong> (<kbd data-var="MOD">Cmd</kbd> + <kbd>G</kbd>) draws every page as a dot with lines for links, and <strong>Backlinks</strong> (right sidebar) lists every page that mentions the one you're reading.</p>
+      </div>
+      <label class="done-row"><input type="checkbox" data-done="3"> Settings changed</label>
+    </section>
+
+    <!-- STEP 4 -->
+    <section class="step" id="s4" data-step="4" data-title="Understand the folders">
+      <div class="step-head"><span class="step-num">04</span><h2>Know what goes where</h2><span class="step-meta">5 minutes · Claude will create these for you in Step 7</span></div>
+      <div class="plain"><span class="lbl">In plain English</span><p>There are two zones. <strong>raw/</strong> is your filing cabinet: original documents, never changed. <strong>wiki/</strong> is Claude's notebook: everything Claude writes. Keeping them apart means you can always check a note against the original. Click any folder to see what belongs in it.</p></div>
+      <div class="explorer">
+        <ul class="tree" id="tree" aria-label="Vault folders"></ul>
+        <div class="detail" id="treeDetail" aria-live="polite"></div>
+      </div>
+      <label class="done-row"><input type="checkbox" data-done="4"> I know what goes where</label>
+    </section>
+
+    <!-- STEP 5 -->
+    <section class="step" id="s5" data-step="5" data-title="Create CLAUDE.md">
+      <div class="step-head"><span class="step-num">05</span><h2>Create the rulebook: CLAUDE.md</h2><span class="step-meta">10 minutes · the most important step</span></div>
+      <div class="plain"><span class="lbl">In plain English</span><p>Claude Code automatically reads a file named <code>CLAUDE.md</code> in the folder it works in, every time. Whatever you write there becomes standing instructions. This is how Claude knows to cite page numbers, keep facts apart from opinion, and track management guidance, without you repeating it. Karpathy calls this the <strong>schema</strong>, and says it's what turns Claude from a generic chatbot into a disciplined wiki maintainer.</p></div>
+      <div class="prose">
+        <ol>
+          <li>In Obsidian, right-click the vault name at the top of the left sidebar (or the empty file list) and choose <strong>New note</strong>.</li>
+          <li>Name it exactly <code>CLAUDE</code>. Obsidian adds <code>.md</code> itself. It must sit at the top level of the vault, not inside a folder.</li>
+          <li>Click <strong>Copy</strong> on the box below and paste it into the note. It is already filled in with <span data-var="COMPANY">your company</span>.</li>
+        </ol>
+      </div>
+      <div class="code"><div class="bar"><span>CLAUDE.md</span><button class="copy" type="button">Copy</button></div><pre class="wrap" data-tpl="tpl-claudemd"></pre></div>
+      <div class="prose">
+        <h3>What the important rules do</h3>
+        <ul>
+          <li><strong>raw/ is read-only.</strong> Your originals can never be damaged, so every claim stays checkable.</li>
+          <li><strong>Cite source and page for every number.</strong> When a figure looks wrong, you click the link and check.</li>
+          <li><strong>"What the company reports" vs "Our read".</strong> Facts and interpretation never blur together.</li>
+          <li><strong>Flag contradictions instead of overwriting.</strong> When Q3 says something different from Q1, that change is often the most useful finding.</li>
+          <li><strong>Guidance tracker.</strong> Every promise management makes gets a row with a deadline. Over a few quarters this shows you how reliable they are.</li>
+          <li><strong>Wait for my OK on ingest.</strong> You see the takeaways before anything is written, so you stay in charge of what matters.</li>
+        </ul>
+        <p>You'll edit this file over time. If Claude keeps doing something you dislike, add a rule. That's the intended way to improve the wiki.</p>
+      </div>
+      <label class="done-row"><input type="checkbox" data-done="5"> CLAUDE.md is in my vault</label>
+    </section>
+
+    <!-- STEP 6 -->
+    <section class="step" id="s6" data-step="6" data-title="Connect Claude to the vault">
+      <div class="step-head"><span class="step-num">06</span><h2>Point Claude at your vault</h2><span class="step-meta">10 minutes</span></div>
+      <div class="plain"><span class="lbl">In plain English</span><p>You're telling Claude which folder it's allowed to work in. It can read and write inside that folder and nowhere else, and it asks your permission before changing files.</p></div>
+      <h3>Option A: desktop app (try this first)</h3>
+      <div class="prose">
+        <ol>
+          <li>Open the Claude desktop app and go to the <strong>Code</strong> tab.</li>
+          <li>Start a new session and, when asked for a folder, choose your vault: <code data-var="VAULTPATH"></code></li>
+          <li>Type <code>What files can you see, and what does CLAUDE.md tell you to do?</code> and press Enter. If Claude describes your rulebook back to you, you're connected.</li>
+        </ol>
+      </div>
+      <h3>Option B: the terminal</h3>
+      <div class="plain"><span class="lbl">In plain English</span><p>The terminal is a window where you type instructions instead of clicking. You'll type three lines: one installs Claude Code, one moves into your vault folder, one starts Claude.</p></div>
+      <div class="prose" data-os="mac">
+        <ol>
+          <li>Press <kbd>Cmd</kbd> + <kbd>Space</kbd>, type <strong>Terminal</strong>, press Enter.</li>
+          <li>Copy each line below, paste it into the terminal, press Enter, and wait for it to finish before the next.</li>
+        </ol>
+      </div>
+      <div class="prose" data-os="win">
+        <ol>
+          <li>Click Start, type <strong>PowerShell</strong>, open <strong>Windows PowerShell</strong>.</li>
+          <li>Copy each line below, paste it (right-click pastes), press Enter, and wait for it to finish before the next.</li>
+        </ol>
+      </div>
+      <div class="code"><div class="bar"><span>Terminal · line by line</span><button class="copy" type="button">Copy</button></div><pre data-tpl-os="tpl-terminal"></pre></div>
+      <div class="prose">
+        <ul>
+          <li><strong>Line 1</strong> downloads and installs Claude Code from Anthropic. You do this once, ever.</li>
+          <li><strong>Line 2</strong>, <code>cd</code>, means "change directory": move into your vault folder.</li>
+          <li><strong>Line 3</strong>, <code>claude</code>, starts Claude in that folder. The first time, it opens your browser to sign in.</li>
+        </ul>
+        <p>Next time you only need lines 2 and 3. If line 3 says "command not found", close the terminal window, open a new one, and try again.</p>
+      </div>
+      <div class="plain"><span class="lbl">About permission prompts</span><p>Claude will ask "Allow edit to wiki/overview.md?" and similar. Read the first few so you understand what it's doing, then choose the option that allows edits for the rest of the session. Your originals are protected by the rule in CLAUDE.md.</p></div>
+      <label class="done-row"><input type="checkbox" data-done="6"> Claude can see my vault</label>
+    </section>
+
+    <!-- STEP 7 -->
+    <section class="step" id="s7" data-step="7" data-title="Build the skeleton">
+      <div class="step-head"><span class="step-num">07</span><h2>Have Claude build the empty structure</h2><span class="step-meta">5 minutes</span></div>
+      <div class="plain"><span class="lbl">In plain English</span><p>Instead of creating twenty folders by hand, you ask Claude. This is also a safe first test: nothing about the company is written yet, so you can check it follows the rulebook.</p></div>
+      <div class="code"><div class="bar"><span>Paste into Claude</span><button class="copy" type="button">Copy</button></div><pre class="wrap" data-tpl="tpl-skeleton"></pre></div>
+      <div class="prose"><p>Switch to Obsidian. The folders and starter pages appear in the left sidebar within a second or two. Open <code>wiki/index.md</code> and <code>wiki/analysis/guidance-tracker.md</code> to see the empty templates.</p></div>
+      <label class="done-row"><input type="checkbox" data-done="7"> Folders and starter pages exist</label>
+    </section>
+
+    <!-- STEP 8 -->
+    <section class="step" id="s8" data-step="8" data-title="Collect first sources">
+      <div class="step-head"><span class="step-num">08</span><h2>Collect your first batch of documents</h2><span class="step-meta">30–45 minutes</span></div>
+      <div class="plain"><span class="lbl">In plain English</span><p>The wiki only knows what you feed it. Start with a focused set of about a dozen documents covering the last year, not everything ever published. You can always add more.</p></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Document</th><th>How many</th><th>Save into</th><th>Why it matters</th></tr></thead>
+          <tbody id="sourceRows"></tbody>
+        </table>
+      </div>
+      <h3>Where to download them</h3>
+      <div class="prose" data-ex="india"><ul>
+        <li><strong>Company investor relations page</strong>: search "<span data-var="COMPANY">company</span> investor relations". Annual reports, presentations and often transcripts.</li>
+        <li><strong>NSE</strong> (<a href="https://www.nseindia.com" target="_blank" rel="noopener">nseindia.com</a>) → search <span data-var="TICKER">ticker</span> → Corporate filings → Announcements / Annual reports.</li>
+        <li><strong>BSE</strong> (<a href="https://www.bseindia.com" target="_blank" rel="noopener">bseindia.com</a>) → Corporates → Announcements. Concall transcripts are filed here as PDFs.</li>
+        <li><strong>Screener.in</strong> → company page → Documents tab. Annual reports, concall transcripts and credit ratings in one list.</li>
+        <li><strong>Rating agencies</strong> (CRISIL, ICRA, CARE, India Ratings): the "rating rationale" PDF is a short, sober summary of the business and its debt.</li>
+      </ul></div>
+      <div class="prose" data-ex="us"><ul>
+        <li><strong>SEC EDGAR</strong> (<a href="https://www.sec.gov/edgar/search/" target="_blank" rel="noopener">sec.gov/edgar</a>) → search <span data-var="TICKER">ticker</span>. Use the 10-K (annual) and 10-Q (quarterly); 8-K filings carry earnings press releases.</li>
+        <li><strong>Company investor relations page</strong>: earnings decks and webcast transcripts.</li>
+        <li><strong>Transcripts</strong>: many companies post them on their IR page; otherwise use a service you already subscribe to.</li>
+        <li><strong>Proxy statement (DEF 14A)</strong> on EDGAR for management pay and governance.</li>
+      </ul></div>
+      <div class="prose" data-ex="other"><ul>
+        <li><strong>Company investor relations page</strong>: annual report, results, presentations, transcripts.</li>
+        <li><strong>Your stock exchange's filings search</strong>: official announcements and results.</li>
+        <li><strong>The national securities regulator's filing database</strong>, if it has one.</li>
+      </ul></div>
+      <h3>Name files so they sort by date</h3>
+      <div class="prose">
+        <p>Use <code>year-month-what.pdf</code>. Claude reads the names, and you'll find things faster.</p>
+      </div>
+      <div class="code"><div class="bar"><span>Example file names</span><button class="copy" type="button">Copy</button></div><pre data-tpl="tpl-names"></pre></div>
+      <h3>Clipping news with Obsidian Web Clipper</h3>
+      <div class="prose"><ol>
+        <li>Install the free browser extension from <a href="https://obsidian.md/clipper" target="_blank" rel="noopener">obsidian.md/clipper</a>.</li>
+        <li>Open its settings, and in the default template set the note location to <code>raw/news</code>.</li>
+        <li>On any news article, click the extension icon → <strong>Add to Obsidian</strong>. The article becomes a clean markdown file in your vault.</li>
+        <li>If it has charts, open the note in Obsidian and press your <kbd data-var="MOD">Cmd</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> hotkey to save the images locally.</li>
+      </ol></div>
+      <div class="plain"><span class="lbl">Scanned PDFs</span><p>Some older filings are photos of paper. If you can't select text in the PDF, Claude may struggle to read it. Look for a text version, or tell Claude it's a scan so it reads page images carefully.</p></div>
+      <label class="done-row"><input type="checkbox" data-done="8"> First batch saved into raw/</label>
+    </section>
+
+    <!-- STEP 9 -->
+    <section class="step" id="s9" data-step="9" data-title="Your first ingest">
+      <div class="step-head"><span class="step-num">09</span><h2>Ingest your first document</h2><span class="step-meta">20–30 minutes for an annual report</span></div>
+      <div class="plain"><span class="lbl">In plain English</span><p>"Ingest" means Claude reads one document and folds what it learned into the wiki. Karpathy recommends doing them <strong>one at a time</strong> while you stay involved: read the summary, tell Claude what to emphasise, then let it update the pages.</p></div>
+      <h3>Order matters</h3>
+      <div class="prose"><ol>
+        <li><strong>Annual report first.</strong> It builds the foundation: business model, segments, management, risks.</li>
+        <li><strong>Then quarterly material, oldest to newest:</strong> results, presentation and transcript for each quarter. Going forward in time lets the timeline and guidance tracker build naturally, and lets Claude spot when the story changes.</li>
+        <li><strong>Rating report and news last.</strong> They add colour on top of the core.</li>
+      </ol></div>
+      <div class="code"><div class="bar"><span>Paste into Claude · edit the file name</span><button class="copy" type="button">Copy</button></div><pre class="wrap" data-tpl="tpl-ingest"></pre></div>
+      <h3>What happens next</h3>
+      <div class="prose"><ol>
+        <li>Claude reads the report in sections. A 300-page annual report takes a while; let it work.</li>
+        <li>It lists the key takeaways and waits. This is your moment: reply with anything like "Focus more on the retail segment" or "The debt refinancing is the key point."</li>
+        <li>Reply <code>OK, go ahead</code>. Claude writes the source page, updates the company pages, fills the guidance tracker, and updates the index and log.</li>
+        <li>In Obsidian, open <code>wiki/overview.md</code> and click through the links. Then press <kbd data-var="MOD">Cmd</kbd> + <kbd>G</kbd> for the graph.</li>
+      </ol></div>
+      <div class="plain"><span class="lbl">Check the work</span><p>Pick three numbers from the new pages and verify them against the PDF using the cited page numbers. If one is wrong, tell Claude and ask it to fix it. Do this for every early ingest until you trust the pattern.</p></div>
+      <label class="done-row"><input type="checkbox" data-done="9"> First document ingested and checked</label>
+    </section>
+
+    <!-- STEP 10 -->
+    <section class="step" id="s10" data-step="10" data-title="Ingest the rest">
+      <div class="step-head"><span class="step-num">10</span><h2>Ingest the rest of the batch</h2><span class="step-meta">10–20 minutes each</span></div>
+      <div class="plain"><span class="lbl">In plain English</span><p>Same routine for each document. This is where the compounding starts: each new transcript is compared against everything already in the wiki, so Claude can tell you what changed.</p></div>
+      <div class="prose"><ul>
+        <li>Start a fresh Claude session every few documents. Long sessions slow down and cost more. Nothing is lost, because everything lives in the wiki files and CLAUDE.md is read again each time.</li>
+        <li>After each transcript, open <code>wiki/analysis/guidance-tracker.md</code>. Watching it fill up is the quickest way to see the value.</li>
+        <li>Skim <code>wiki/log.md</code> occasionally. It's the diary of every change Claude made.</li>
+      </ul></div>
+      <div class="code"><div class="bar"><span>Useful extra after a transcript</span><button class="copy" type="button">Copy</button></div><pre class="wrap" data-tpl="tpl-diff"></pre></div>
+      <label class="done-row"><input type="checkbox" data-done="10"> Whole first batch ingested</label>
+    </section>
+
+    <!-- STEP 11 -->
+    <section class="step" id="s11" data-step="11" data-title="Ask questions & lint">
+      <div class="step-head"><span class="step-num">11</span><h2>Ask questions, save answers, run health checks</h2><span class="step-meta">ongoing</span></div>
+      <div class="plain"><span class="lbl">In plain English</span><p>Now the wiki works for you. Claude answers from its own organised notes instead of re-reading every PDF. When an answer is good, save it as a page so your own analysis compounds too.</p></div>
+      <h3>Questions worth asking</h3>
+      <div class="prompts" id="queryList"></div>
+      <h3>Health check (lint)</h3>
+      <div class="prose"><p>Run this after every 5 or so ingests, and always after a quarterly result.</p></div>
+      <div class="code"><div class="bar"><span>Paste into Claude</span><button class="copy" type="button">Copy</button></div><pre class="wrap" data-tpl="tpl-lint"></pre></div>
+      <label class="done-row"><input type="checkbox" data-done="11"> Asked a question, saved an answer, ran a lint</label>
+    </section>
+
+    <!-- STEP 12 -->
+    <section class="step" id="s12" data-step="12" data-title="Quarterly routine & extras">
+      <div class="step-head"><span class="step-num">12</span><h2>Your quarterly routine, and optional extras</h2><span class="step-meta">about 1 hour per quarter</span></div>
+      <div class="plain"><span class="lbl">In plain English</span><p>The wiki stays useful only if new results go in. The good news is that this is a short checklist, because Claude does the updating.</p></div>
+      <div class="code"><div class="bar"><span>Each results season</span><button class="copy" type="button">Copy</button></div><pre class="wrap" data-tpl="tpl-quarterly"></pre></div>
+      <h3>Optional extras, once you're comfortable</h3>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Extra</th><th>What it does</th><th>How</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Dataview</td><td>Builds live tables from the frontmatter on each page, e.g. every page with <code>confidence: low</code>.</td><td>Obsidian → Settings → Community plugins → Turn on → Browse → "Dataview" → Install → Enable.</td></tr>
+            <tr><td class="k">Marp</td><td>Turns a markdown page into slides, handy for presenting your thesis.</td><td>Community plugins → search "Marp Slides". Ask Claude to write the page in Marp format.</td></tr>
+            <tr><td class="k">Backup with Git</td><td>Keeps a full history of every change so you can undo anything. Karpathy keeps his wiki this way.</td><td>Ask Claude: "Set this vault up as a git repository and commit everything. Explain each step to me."</td></tr>
+            <tr><td class="k">A second company</td><td>Peers make the wiki far more useful (competitor pages fill in properly).</td><td>Make a new vault and copy CLAUDE.md, changing the company name. Or keep one vault with a folder per company once you're confident.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <label class="done-row"><input type="checkbox" data-done="12"> I have a routine</label>
+    </section>
+
+    <!-- TROUBLESHOOTING -->
+    <section class="step" id="help">
+      <div class="step-head"><span class="step-num">??</span><h2>When something goes wrong</h2></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Problem</th><th>Fix</th></tr></thead>
+          <tbody>
+            <tr><td class="k">Pages don't show up in Obsidian</td><td>Claude is working in a different folder. Ask it "What folder are you in?" and compare with your vault path. Restart it from the right folder.</td></tr>
+            <tr><td class="k">Claude ignores the rules</td><td>Check the file is named exactly <code>CLAUDE.md</code> and sits at the vault's top level. Start a new session. Say "Re-read CLAUDE.md and follow it."</td></tr>
+            <tr><td class="k">Links appear as plain text</td><td>Turn on "Use [[Wikilinks]]" (Step 3). Make sure Claude didn't add <code>.md</code> inside the brackets.</td></tr>
+            <tr><td class="k">"Usage limit reached"</td><td>Long PDFs use a lot. Wait for the limit to reset, start fresh sessions more often, or upgrade the plan.</td></tr>
+            <tr><td class="k">A number looks wrong</td><td>Click the source link, check the cited page, tell Claude the correct figure and page. Add a rule to CLAUDE.md if it's a repeated mistake.</td></tr>
+            <tr><td class="k">Claude changed something in raw/</td><td>It shouldn't. Restore the original download, and add "NEVER touch raw/" in capitals at the top of CLAUDE.md.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="step" id="glossary">
+      <div class="step-head"><span class="step-num">Aa</span><h2>Words you'll meet</h2></div>
+      <dl class="glossary">
+        <div><dt>Markdown (.md)</dt><dd>Plain text with light formatting: <code>#</code> for headings, <code>-</code> for bullets. Readable by people, apps and AI.</dd></div>
+        <div><dt>Vault</dt><dd>The folder Obsidian treats as your notebook.</dd></div>
+        <div><dt>Wikilink</dt><dd><code>[[page-name]]</code>, a clickable link from one note to another.</dd></div>
+        <div><dt>Frontmatter</dt><dd>The small block between <code>---</code> lines at the top of a page, holding facts like type and date.</dd></div>
+        <div><dt>Schema</dt><dd>Karpathy's word for the rulebook. Here that's CLAUDE.md.</dd></div>
+        <div><dt>Ingest</dt><dd>Claude reading one source and updating the wiki with it.</dd></div>
+        <div><dt>Lint</dt><dd>A health check for contradictions, gaps and broken links.</dd></div>
+        <div><dt>RAG</dt><dd>The usual approach, where AI searches raw documents fresh for every question. The wiki replaces that with notes built once and kept current.</dd></div>
+        <div><dt>Terminal</dt><dd>A text window for typing commands to your computer.</dd></div>
+        <div><dt>Orphan page</dt><dd>A page nothing links to. Lint finds these.</dd></div>
+      </dl>
+    </section>
+
+    <p class="footer">Based on Andrej Karpathy's <a href="https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f" target="_blank" rel="noopener">LLM Wiki gist</a>, adapted for single-company equity research. The wiki records information; it doesn't replace your own judgement or tell you what to buy.</p>
+  </main>
+</div>
+
+<!-- ========== TEMPLATES (placeholders are filled from the setup panel) ========== -->
+<script type="text/plain" id="tpl-claudemd"># {{COMPANY}} Research Wiki — Instructions for Claude
+
+You maintain an equity research wiki on **{{COMPANY}}** ({{TICKER}}, {{EXCHANGE}}).
+I am the analyst. I choose the sources and ask the questions. You read the sources,
+write and update the wiki pages, and keep everything consistent and cited.
+I read the wiki in Obsidian.
+
+## Folders
+
+- `raw/` — source documents. **READ ONLY.** Never edit, rename, move or delete anything in `raw/`.
+  - `raw/filings/` — annual reports, quarterly results, regulatory filings
+  - `raw/transcripts/` — earnings call transcripts
+  - `raw/presentations/` — investor presentations
+  - `raw/news/` — articles clipped from the web
+  - `raw/data/` — spreadsheets and data exports
+  - `raw/assets/` — images saved by Obsidian
+- `wiki/` — you own this folder. Create and edit pages here.
+  - `wiki/index.md` — catalog of every page (read this first for any question)
+  - `wiki/log.md` — append-only history of everything you did
+  - `wiki/overview.md` — one-page current picture of the company
+  - `wiki/timeline.md` — dated events, newest at the top
+  - `wiki/sources/` — one summary page per source document
+  - `wiki/company/` — business-model, segments, financials, kpis, capital-allocation, management, governance, valuation
+  - `wiki/entities/` — one page per person, competitor, customer, supplier or regulator that matters
+  - `wiki/concepts/` — industry concepts and metrics worth explaining
+  - `wiki/analysis/` — thesis, risks, open-questions, guidance-tracker, and answers I ask you to save
+
+## Page rules
+
+- File names: lowercase-with-hyphens.md. Source pages: `src-YYYY-MM-short-name.md`.
+- Every page starts with frontmatter:
+  ```
+  ---
+  type: source | company | entity | concept | analysis
+  updated: YYYY-MM-DD
+  sources: [src-..., src-...]
+  confidence: high | medium | low
+  ---
+  ```
+- Link related pages with `[[page-name]]` (no `.md`). Link generously.
+- Every number and factual claim cites its source page and page number,
+  e.g. `Revenue grew 12% YoY ([[src-2025-10-q2-results]], p.4)`.
+- Always state currency, units and period ({{UNITS}}, {{PERIODS}}).
+- Keep facts and opinion apart: use the headings **What the company reports** and **Our read**.
+- Write management statements as claims ("Management says…"), not as facts.
+- If a new source contradicts a page, do not silently overwrite it. Add a
+  `> [!warning] Contradiction` note citing both sources and add it to
+  `wiki/analysis/open-questions.md`.
+- Never invent numbers. If you are unsure, say so and set `confidence: low`.
+- Do not give buy/sell calls unless I ask. `wiki/analysis/thesis.md` records MY view.
+
+## Source page template
+
+1. What it is — type, date, period covered, file path in `raw/`
+2. Key takeaways — 5 to 10 bullets
+3. Numbers — table: metric | value | period | page
+4. Guidance and promises — exact quote, page, deadline
+5. What changed since the previous source of this type
+6. Wiki pages updated
+
+## Workflows
+
+### Ingest — when I say "ingest <file>"
+1. Read the file in `raw/`. If it is long, read it in parts until you have covered all of it.
+2. Tell me the 5–8 most important takeaways and anything surprising. Wait for my OK.
+3. Create the source page in `wiki/sources/`.
+4. Update every affected page: `overview.md`, `timeline.md`, `company/`, `entities/`,
+   `concepts/`, `analysis/`. Create new pages for important new entities or concepts.
+5. Add every forward-looking statement to `wiki/analysis/guidance-tracker.md`
+   (date said, who said it, what was promised, by when, status).
+6. Update `wiki/index.md`.
+7. Append to `wiki/log.md`: `## [YYYY-MM-DD] ingest | <source title>` and a list of pages touched.
+8. Finish with a short summary of what changed.
+
+### Query — when I ask a question
+1. Read `wiki/index.md`, then the relevant pages. Open files in `raw/` only if the wiki lacks the detail.
+2. Answer with `[[links]]` to wiki pages and source citations.
+3. Say plainly what the wiki does not cover yet.
+4. Offer to save the answer to `wiki/analysis/`. If I agree, save it, then update the index and log.
+
+### Lint — when I say "lint"
+Check for: contradictions between pages; claims superseded by newer sources; numbers
+without citations; orphan pages (nothing links to them); names mentioned often that
+have no page; broken links; guidance whose deadline has passed (was it delivered?);
+gaps worth filling, with specific sources I should find.
+Report a list. Fix simple issues yourself. Ask before big rewrites. Log the lint in `wiki/log.md`.
+
+## index.md format
+
+Group pages under these headings: Overview, Company, Analysis, Entities, Concepts, Sources.
+One line per page: `- [[page-name]] — one-line summary (updated YYYY-MM-DD)`.
+</script>
+
+<script type="text/plain" id="tpl-skeleton">Read CLAUDE.md carefully. Then create the folder structure it describes for {{COMPANY}}:
+raw/ with its six subfolders, and wiki/ with its subfolders.
+
+Create these starter pages in wiki/, each with correct frontmatter but no company facts yet:
+- index.md (empty headings in the format CLAUDE.md gives)
+- log.md (first entry: today's date, "setup | wiki created")
+- overview.md (headings only: What the company does, How it makes money, Key numbers, What matters now, Open questions)
+- timeline.md
+- analysis/thesis.md, analysis/risks.md, analysis/open-questions.md
+- analysis/guidance-tracker.md (a table with columns: Date said | Who | Promise | Deadline | Status | Source)
+
+Do not invent any facts. When done, list what you created.</script>
+
+<script type="text/plain" id="tpl-ingest">Ingest raw/filings/{{AR_FILE}}
+
+Follow the ingest workflow in CLAUDE.md. This is the first source, so you will also
+write the first real versions of overview.md and the pages in wiki/company/.
+Show me the key takeaways first and wait for my OK before writing any pages.</script>
+
+<script type="text/plain" id="tpl-diff">Compare this quarter's call with the previous call already in the wiki.
+What did management say differently: new topics, dropped topics, changed tone,
+changed numbers? Update guidance-tracker.md statuses where a promise was met or missed.</script>
+
+<script type="text/plain" id="tpl-lint">Lint the wiki, following the lint workflow in CLAUDE.md.
+Also: list the 5 most important questions about {{COMPANY}} the wiki cannot answer yet,
+and the specific documents I should find to answer them.</script>
+
+<script type="text/plain" id="tpl-quarterly">1. Download the new quarter's results, presentation and call transcript into raw/.
+2. In Claude: "Ingest" each one, in that order (results → presentation → transcript).
+3. In Claude: "Compare this quarter with last quarter and update the guidance tracker."
+4. In Claude: "Update overview.md and thesis.md's 'What changed' section. Show me the changes."
+5. In Claude: "lint"
+6. Read overview.md and the log in Obsidian. Write your own view in analysis/thesis.md.</script>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "llm-wiki-guide-v1";
+  var defaults = { company: "", ticker: "", exchange: "india", vault: "", os: "mac", done: {} };
+  var state = Object.assign({}, defaults);
+  try { var saved = JSON.parse(localStorage.getItem(KEY) || "null"); if (saved) state = Object.assign({}, defaults, saved); } catch (e) {}
+  if (!state.done) state.done = {};
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  var EX = {
+    india: { label: "listed on NSE/BSE", units: "₹ crore", periods: "FY25, Q2 FY26 — Indian fiscal year ends 31 March", ar: "2025-annual-report.pdf" },
+    us: { label: "listed in the US", units: "$ million", periods: "FY2025, Q2 FY2025 — check the company's fiscal year end", ar: "2025-10-K.pdf" },
+    other: { label: "listed company", units: "local currency, with units", periods: "fiscal year and quarter as the company reports them", ar: "2025-annual-report.pdf" }
+  };
+
+  function vars() {
+    var company = state.company.trim() || "the company";
+    var ticker = state.ticker.trim().toUpperCase() || "TICKER";
+    var vault = (state.vault.trim() || "EquityWiki").replace(/[\\/:*?"<>|]/g, "");
+    var ex = EX[state.exchange] || EX.india;
+    var path = state.os === "win" ? "C:\\Users\\<you>\\Documents\\" + vault : "~/Documents/" + vault;
+    return { COMPANY: company, TICKER: ticker, EXCHANGE: ex.label, VAULT: vault, VAULTPATH: path,
+      UNITS: ex.units, PERIODS: ex.periods, AR_FILE: ex.ar, MOD: state.os === "win" ? "Ctrl" : "Cmd" };
+  }
+  function fill(s, v) { return s.replace(/\{\{(\w+)\}\}/g, function (m, k) { return v[k] != null ? v[k] : m; }); }
+  function tpl(id) { var el = document.getElementById(id); return el ? el.textContent.replace(/^\n/, "") : ""; }
+
+  var TERMINAL = {
+    mac: "curl -fsSL https://claude.ai/install.sh | bash\ncd \"$HOME/Documents/{{VAULT}}\"\nclaude",
+    win: "irm https://claude.ai/install.ps1 | iex\ncd \"$HOME\\Documents\\{{VAULT}}\"\nclaude"
+  };
+
+  var NAMES = {
+    india: "raw/filings/2025-annual-report.pdf\nraw/filings/2025-07-q1-fy26-results.pdf\nraw/presentations/2025-07-q1-fy26-investor-presentation.pdf\nraw/transcripts/2025-08-q1-fy26-concall.pdf\nraw/filings/2025-03-credit-rating-crisil.pdf\nraw/news/2025-09-new-plant-announcement.md",
+    us: "raw/filings/2025-10-K.pdf\nraw/filings/2025-08-10-Q-q2.pdf\nraw/presentations/2025-08-q2-earnings-deck.pdf\nraw/transcripts/2025-08-q2-earnings-call.pdf\nraw/filings/2025-04-proxy-def14a.pdf\nraw/news/2025-09-acquisition-announcement.md",
+    other: "raw/filings/2025-annual-report.pdf\nraw/filings/2025-07-q2-results.pdf\nraw/presentations/2025-07-q2-investor-presentation.pdf\nraw/transcripts/2025-08-q2-earnings-call.pdf\nraw/news/2025-09-major-contract-win.md"
+  };
+
+  var SOURCES = {
+    india: [
+      ["Latest annual report", "1", "raw/filings", "The foundation: segments, strategy, risks, related parties, management pay."],
+      ["Quarterly results (financials)", "Last 4", "raw/filings", "The numbers, quarter by quarter."],
+      ["Investor presentations", "Last 4", "raw/presentations", "How management frames the story, plus KPIs not in the results."],
+      ["Earnings call (concall) transcripts", "Last 4", "raw/transcripts", "What management promised, and what analysts worry about."],
+      ["Credit rating rationale", "1", "raw/filings", "An independent, conservative view of the business and its debt."],
+      ["News articles", "3–5", "raw/news", "Big events: deals, regulation, management changes."]
+    ],
+    us: [
+      ["Latest 10-K (annual report)", "1", "raw/filings", "The foundation: segments, strategy, risk factors, MD&A."],
+      ["10-Q filings", "Last 3", "raw/filings", "Quarterly numbers and updates."],
+      ["Earnings decks", "Last 4", "raw/presentations", "How management frames the story, plus KPIs."],
+      ["Earnings call transcripts", "Last 4", "raw/transcripts", "What management promised, and what analysts worry about."],
+      ["Proxy statement (DEF 14A)", "1", "raw/filings", "Pay, incentives, board and governance."],
+      ["News articles", "3–5", "raw/news", "Big events: deals, regulation, management changes."]
+    ],
+    other: [
+      ["Latest annual report", "1", "raw/filings", "The foundation: segments, strategy, risks."],
+      ["Quarterly or half-year results", "Last 4", "raw/filings", "The numbers, period by period."],
+      ["Investor presentations", "Last 4", "raw/presentations", "How management frames the story."],
+      ["Earnings call transcripts", "Last 4", "raw/transcripts", "What management promised."],
+      ["News articles", "3–5", "raw/news", "Big events and context."]
+    ]
+  };
+
+  var QUERIES = [
+    ["Understand the business", "Explain how {{COMPANY}} makes money as if I'm new to the industry. Which segments matter most for profit, not just revenue? Cite sources."],
+    ["Management credibility", "Using the guidance tracker, how often has {{COMPANY}}'s management delivered on what it promised over the last four quarters? Give a table, then your read."],
+    ["What changed", "What are the three most important things that changed for {{COMPANY}} in the last two quarters? Link to the sources."],
+    ["Bull vs bear", "Build a bull / base / bear case table for {{COMPANY}} using only facts in the wiki. Mark which assumptions are mine to decide. Save it as analysis/scenarios.md."],
+    ["Prepare for the next call", "Draft 8 sharp questions I'd want answered on {{COMPANY}}'s next earnings call, based on open-questions.md and missed guidance."]
+  ];
+
+  var TREE = [
+    { p: "CLAUDE.md", d: 0, who: "You write · Claude reads", t: "The rulebook. Claude reads it at the start of every session.", ex: "Edit it whenever you want Claude to behave differently." },
+    { p: "raw/", d: 0, who: "You add · Claude reads only", t: "Your filing cabinet of original documents. Claude never changes anything here.", ex: "Think of it as the evidence locker." },
+    { p: "filings/", d: 1, who: "You add", t: "Annual reports and quarterly results, plus regulatory filings and rating reports.", ex: "e.g. 2025-annual-report.pdf" },
+    { p: "transcripts/", d: 1, who: "You add", t: "Earnings call transcripts. The richest source for management tone and promises.", ex: "e.g. 2025-08-q1-fy26-concall.pdf" },
+    { p: "presentations/", d: 1, who: "You add", t: "Investor decks published with results.", ex: "e.g. 2025-07-q1-investor-presentation.pdf" },
+    { p: "news/", d: 1, who: "Web Clipper adds", t: "News articles saved as markdown by the Obsidian Web Clipper.", ex: "e.g. 2025-09-new-plant-announcement.md" },
+    { p: "data/", d: 1, who: "You add", t: "Spreadsheets: financial exports, your own model, price history.", ex: "e.g. financials-10y.xlsx" },
+    { p: "assets/", d: 1, who: "Obsidian adds", t: "Images from clipped articles and pasted screenshots.", ex: "Filled automatically by the Step 3 settings." },
+    { p: "wiki/", d: 0, who: "Claude writes · you read", t: "Claude's notebook. Every page here is written and maintained by Claude.", ex: "You can edit pages too, but usually you ask Claude to." },
+    { p: "index.md", d: 1, who: "Claude maintains", t: "The table of contents: every page with a one-line summary. Claude reads this first to find answers.", ex: "Karpathy found this works well up to a few hundred pages without fancy search." },
+    { p: "log.md", d: 1, who: "Claude appends", t: "A diary of every ingest, question and health check, with dates.", ex: "## [2025-10-26] ingest | Q2 FY26 concall" },
+    { p: "overview.md", d: 1, who: "Claude maintains", t: "The one-page summary of the company as it stands today.", ex: "Your starting point every time you open the vault." },
+    { p: "timeline.md", d: 1, who: "Claude maintains", t: "Dated events: results, deals, management changes, guidance.", ex: "Newest at the top." },
+    { p: "sources/", d: 1, who: "Claude writes", t: "One summary page per document in raw/, with key numbers and page references.", ex: "e.g. src-2025-08-q1-fy26-concall.md" },
+    { p: "company/", d: 1, who: "Claude maintains", t: "The core company file: business model, segments, financials, KPIs, capital allocation, management, governance, valuation.", ex: "These pages get richer with every ingest." },
+    { p: "entities/", d: 1, who: "Claude maintains", t: "One page per important person or organisation: CEO, CFO, competitors, big customers, suppliers, regulators.", ex: "e.g. competitor-xyz.md" },
+    { p: "concepts/", d: 1, who: "Claude maintains", t: "Industry ideas and metrics explained once, then linked everywhere.", ex: "e.g. same-store-sales-growth.md" },
+    { p: "analysis/", d: 1, who: "Claude + you", t: "Thinking pages: thesis, risks, open questions, guidance tracker, and answers you chose to save.", ex: "thesis.md holds your view, not Claude's." }
+  ];
+
+  var STEP_COUNT = 13;
+
+  function render() {
+    var v = vars();
+    document.querySelectorAll("[data-tpl]").forEach(function (el) { el.textContent = fill(tpl(el.getAttribute("data-tpl")), v); });
+    document.querySelectorAll("[data-tpl-os]").forEach(function (el) { el.textContent = fill(TERMINAL[state.os] || TERMINAL.mac, v); });
+    var namesEl = document.querySelector('[data-tpl="tpl-names"]');
+    if (namesEl) namesEl.textContent = NAMES[state.exchange] || NAMES.india;
+    document.querySelectorAll("[data-var]").forEach(function (el) {
+      var k = el.getAttribute("data-var");
+      if (k === "COMPANY" && !state.company.trim()) { el.textContent = el.closest("h1") ? "your company" : "your company"; return; }
+      if (k === "TICKER" && !state.ticker.trim()) { el.textContent = "your ticker"; return; }
+      el.textContent = v[k];
+    });
+    document.querySelectorAll("[data-os]").forEach(function (el) { el.hidden = el.getAttribute("data-os") !== state.os; });
+    document.querySelectorAll("[data-ex]").forEach(function (el) { el.hidden = el.getAttribute("data-ex") !== state.exchange; });
+    document.querySelectorAll("[data-os-btn]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-os-btn") === state.os)); });
+
+    var rows = SOURCES[state.exchange] || SOURCES.india;
+    var tb = document.getElementById("sourceRows");
+    tb.innerHTML = "";
+    rows.forEach(function (r) {
+      var tr = document.createElement("tr");
+      r.forEach(function (c, i) { var td = document.createElement("td"); if (i === 0) td.className = "k"; if (i === 2) { var code = document.createElement("code"); code.textContent = c; td.appendChild(code); } else td.textContent = c; tr.appendChild(td); });
+      tb.appendChild(tr);
+    });
+
+    var ql = document.getElementById("queryList");
+    ql.innerHTML = "";
+    QUERIES.forEach(function (q) {
+      var wrap = document.createElement("div");
+      var t = document.createElement("div"); t.className = "prompt-title"; t.textContent = q[0];
+      wrap.appendChild(t);
+      wrap.appendChild(makeCode("Paste into Claude", fill(q[1], v)));
+      ql.appendChild(wrap);
+    });
+    updateProgress();
+  }
+
+  function makeCode(label, text) {
+    var box = document.createElement("div"); box.className = "code";
+    var bar = document.createElement("div"); bar.className = "bar";
+    var s = document.createElement("span"); s.textContent = label;
+    var b = document.createElement("button"); b.className = "copy"; b.type = "button"; b.textContent = "Copy";
+    bar.appendChild(s); bar.appendChild(b);
+    var pre = document.createElement("pre"); pre.className = "wrap"; pre.textContent = text;
+    box.appendChild(bar); box.appendChild(pre);
+    return box;
+  }
+
+  // Copy buttons (delegated, so dynamically built ones work too)
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest(".copy");
+    if (!btn) return;
+    var pre = btn.closest(".code").querySelector("pre");
+    var text = pre.textContent;
+    function done(ok) { btn.textContent = ok ? "Copied" : "Select & copy"; setTimeout(function () { btn.textContent = "Copy"; }, 1600); }
+    function fallback() {
+      var r = document.createRange(); r.selectNodeContents(pre);
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      var ok = false; try { ok = document.execCommand("copy"); } catch (err) {}
+      done(ok);
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+      else fallback();
+    } catch (err) { fallback(); }
+  });
+
+  // Inputs
+  var fields = { fCompany: "company", fTicker: "ticker", fExchange: "exchange", fVault: "vault" };
+  Object.keys(fields).forEach(function (id) {
+    var el = document.getElementById(id);
+    el.value = state[fields[id]] || (id === "fExchange" ? "india" : "");
+    el.addEventListener("input", function () { state[fields[id]] = el.value; save(); render(); });
+  });
+  document.querySelectorAll("[data-os-btn]").forEach(function (b) {
+    b.addEventListener("click", function () { state.os = b.getAttribute("data-os-btn"); save(); render(); });
+  });
+
+  // Rail + progress
+  var rail = document.getElementById("railList");
+  document.querySelectorAll("section[data-step]").forEach(function (sec) {
+    var n = sec.getAttribute("data-step");
+    var li = document.createElement("li");
+    var a = document.createElement("a"); a.href = "#" + sec.id; a.setAttribute("data-rail", n);
+    var num = document.createElement("span"); num.className = "n";
+    var inner = document.createElement("span"); inner.textContent = String(n).padStart(2, "0"); num.appendChild(inner);
+    var lbl = document.createElement("span"); lbl.textContent = sec.getAttribute("data-title");
+    a.appendChild(num); a.appendChild(lbl); li.appendChild(a); rail.appendChild(li);
+  });
+  document.querySelectorAll("[data-done]").forEach(function (cb) {
+    var n = cb.getAttribute("data-done");
+    cb.id = "done-" + n;
+    cb.checked = !!state.done[n];
+    cb.addEventListener("change", function () { state.done[n] = cb.checked; save(); updateProgress(); });
+  });
+  function updateProgress() {
+    var count = 0;
+    for (var i = 0; i < STEP_COUNT; i++) if (state.done[i]) count++;
+    var pct = Math.round(count / STEP_COUNT * 100) + "%";
+    document.querySelectorAll(".js-meter").forEach(function (m) { m.style.width = pct; });
+    document.querySelectorAll(".js-meter-text").forEach(function (m) { m.textContent = count + " of " + STEP_COUNT + " done"; });
+    document.querySelectorAll("[data-rail]").forEach(function (a) { a.classList.toggle("done", !!state.done[a.getAttribute("data-rail")]); });
+  }
+
+  // Folder explorer
+  var treeEl = document.getElementById("tree"), detail = document.getElementById("treeDetail");
+  function showNode(i) {
+    treeEl.querySelectorAll("button").forEach(function (b, j) { b.setAttribute("aria-current", String(i === j)); });
+    var n = TREE[i];
+    detail.innerHTML = "";
+    var w = document.createElement("span"); w.className = "who"; w.textContent = n.who;
+    var h = document.createElement("h3"); h.textContent = n.p;
+    var p = document.createElement("p"); p.textContent = n.t;
+    var ex = document.createElement("p"); ex.className = "ex"; ex.textContent = n.ex;
+    detail.appendChild(w); detail.appendChild(h); detail.appendChild(p); detail.appendChild(ex);
+  }
+  TREE.forEach(function (n, i) {
+    var li = document.createElement("li");
+    var b = document.createElement("button"); b.type = "button"; 
+    b.className = "d" + n.d; b.textContent = (n.p.slice(-1) === "/" ? "▸ " : "· ") + n.p;
+    b.addEventListener("click", function () { showNode(i); });
+    li.appendChild(b); treeEl.appendChild(li);
+  });
+
+  render();
+  showNode(0);
+})();
+</script>

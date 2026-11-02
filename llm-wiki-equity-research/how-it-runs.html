@@ -1,0 +1,762 @@
+<title>Wiki Engine Room</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: sticky section bar on top; five stacked "rooms", each pairing a short explanation with one hands-on widget. Same palette as the setup guide. */
+:root {
+  --bg: #F2F5F4;
+  --surface: #FFFFFF;
+  --ink: #15221E;
+  --muted: #586964;
+  --line: #D6DEDB;
+  --accent: #1E5D53;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #DFEDE9;
+  --note: #FFF3D1;
+  --note-line: #E7C76A;
+  --note-ink: #5E4500;
+  --code-bg: #12201C;
+  --code-fg: #DCEBE5;
+  --code-dim: #8FB3A7;
+  --c-hub: #1E5D53;
+  --c-source: #9A6B0C;
+  --c-company: #2F5FA8;
+  --c-entity: #A2416B;
+  --c-concept: #6D4FB0;
+  --c-analysis: #2E8A4E;
+  --you: #2F5FA8;
+  --claude: #B4532A;
+  --obsidian: #6D4FB0;
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "Source Sans 3", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1412; --surface: #141D1A; --ink: #E2ECE8; --muted: #93A49E; --line: #26342F;
+    --accent: #72C4B3; --accent-ink: #0D1412; --accent-soft: #173029;
+    --note: #2A2410; --note-line: #7A6420; --note-ink: #F1D98F;
+    --code-bg: #08100D; --code-fg: #D4E6DF; --code-dim: #7FA497;
+    --c-hub: #72C4B3; --c-source: #E0AE4A; --c-company: #7FA8EC; --c-entity: #E58AB0; --c-concept: #B7A0F0; --c-analysis: #74CE8F;
+    --you: #7FA8EC; --claude: #F0936A; --obsidian: #B7A0F0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1412; --surface: #141D1A; --ink: #E2ECE8; --muted: #93A49E; --line: #26342F;
+  --accent: #72C4B3; --accent-ink: #0D1412; --accent-soft: #173029;
+  --note: #2A2410; --note-line: #7A6420; --note-ink: #F1D98F;
+  --code-bg: #08100D; --code-fg: #D4E6DF; --code-dim: #7FA497;
+  --c-hub: #72C4B3; --c-source: #E0AE4A; --c-company: #7FA8EC; --c-entity: #E58AB0; --c-concept: #B7A0F0; --c-analysis: #74CE8F;
+  --you: #7FA8EC; --claude: #F0936A; --obsidian: #B7A0F0;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 17px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.45rem, 3vw, 1.9rem); font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: 1.08rem; font-weight: 700; }
+p { margin: 0; }
+a { color: var(--accent); text-underline-offset: 2px; }
+code { font-family: var(--font-mono); font-size: 0.85em; background: var(--accent-soft); padding: 0.06em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+button { font: inherit; color: inherit; }
+
+.wrap { max-width: 1140px; margin: 0 auto; }
+.secbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+.secbar nav { max-width: 1140px; margin: 0 auto; display: flex; gap: 4px; overflow-x: auto; padding-block: 8px; scrollbar-width: none; }
+.secbar a { flex: none; text-decoration: none; color: var(--muted); font-size: 0.92rem; font-weight: 600; padding: 6px 12px; border-radius: 999px; }
+.secbar a:hover { background: var(--accent-soft); color: var(--ink); }
+.secbar a.on { background: var(--accent); color: var(--accent-ink); }
+
+main { display: flex; flex-direction: column; gap: 72px; padding-block: 36px 96px; }
+.hero { display: flex; flex-direction: column; gap: 16px; max-width: 780px; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.lede { font-size: 1.18rem; color: var(--muted); max-width: 64ch; }
+.cast { display: flex; flex-wrap: wrap; gap: 10px 22px; font-size: 0.95rem; }
+.cast span { display: inline-flex; align-items: center; gap: 8px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+
+.room { display: flex; flex-direction: column; gap: 20px; scroll-margin-top: 70px; }
+.room-head { display: flex; flex-direction: column; gap: 8px; border-top: 2px solid var(--ink); padding-top: 14px; max-width: 760px; }
+.room-head .q { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.prose { max-width: 68ch; display: flex; flex-direction: column; gap: 12px; }
+.prose ul { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; }
+.key { background: var(--note); border-left: 4px solid var(--note-line); color: var(--note-ink); border-radius: 0 8px 8px 0; padding: 12px 16px; max-width: 68ch; }
+.key b { display: block; font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.illus { font-size: 0.82rem; color: var(--muted); font-style: italic; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 7px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.93rem; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.who { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* ROOM 1: run-through */
+.run { display: grid; grid-template-columns: minmax(0, 330px) minmax(0, 1fr); }
+@media (max-width: 760px) { .run { grid-template-columns: 1fr; } }
+.stages { list-style: none; margin: 0; padding: 10px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; }
+@media (max-width: 760px) { .stages { border-right: 0; border-bottom: 1px solid var(--line); max-height: 260px; overflow-y: auto; } }
+.stages button { width: 100%; display: grid; grid-template-columns: 24px 10px 1fr; gap: 8px; align-items: center; text-align: left; border: 0; background: none; padding: 7px 8px; border-radius: 6px; cursor: pointer; font-size: 0.93rem; line-height: 1.3; }
+.stages button:hover { background: var(--accent-soft); }
+.stages button[aria-current="step"] { background: var(--accent-soft); font-weight: 700; }
+.stages button.past { color: var(--muted); }
+.stages .n { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.inspector { padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.insp-title { font-size: 1.3rem; }
+.filelists { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 520px) { .filelists { grid-template-columns: 1fr; } }
+.filelists h4 { margin: 0 0 4px; font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.filelists ul { list-style: none; margin: 0; padding: 0; font-family: var(--font-mono); font-size: 0.8rem; display: flex; flex-direction: column; gap: 3px; }
+.filelists li { overflow-wrap: anywhere; }
+.filelists .none { color: var(--muted); font-family: var(--font-body); font-style: italic; font-size: 0.88rem; }
+.ctx { display: flex; flex-direction: column; gap: 6px; }
+.ctx-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ctx-bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.ctx-bar span { display: block; height: 100%; background: var(--claude); width: 0; transition: width 0.4s; }
+.behind { font-size: 0.93rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 10px; }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ROOM 2: folders */
+.fold { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+@media (max-width: 760px) { .fold { grid-template-columns: 1fr; } }
+.fold > div { padding: 18px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.fold > div + div { border-left: 1px solid var(--line); }
+@media (max-width: 760px) { .fold > div + div { border-left: 0; border-top: 1px solid var(--line); } }
+.lbl { font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.maplines, .ftree { list-style: none; margin: 0; padding: 0; font-family: var(--font-mono); font-size: 0.8rem; display: flex; flex-direction: column; gap: 2px; }
+.maplines button, .ftree button { width: 100%; text-align: left; border: 0; background: none; padding: 4px 8px; border-radius: 5px; cursor: pointer; overflow-wrap: anywhere; }
+.maplines button:hover, .ftree button:hover { background: var(--accent-soft); }
+.maplines button.hl, .ftree button.hl { background: var(--accent); color: var(--accent-ink); }
+.ftree .d1 { padding-left: 26px; }
+.ftree button.new { border: 1px dashed var(--accent); }
+.fold-explain { padding: 14px 18px; border-top: 1px solid var(--line); font-size: 0.95rem; }
+.adder { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.adder input { font: inherit; font-family: var(--font-mono); font-size: 0.9rem; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); min-width: 0; flex: 1 1 180px; }
+
+/* ROOM 3: drivers */
+.drivers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 860px) { .drivers { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 460px) { .drivers { grid-template-columns: 1fr; } }
+.driver { border-top: 3px solid var(--accent); padding-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.driver p { font-size: 0.94rem; color: var(--muted); }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs button { border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 999px; cursor: pointer; font-size: 0.92rem; font-weight: 600; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.excerpt { font-family: var(--font-mono); font-size: 0.84rem; background: var(--accent-soft); padding: 14px 16px; border-radius: 8px; white-space: pre-wrap; }
+.fires { display: flex; flex-direction: column; gap: 10px; }
+.fire { display: grid; grid-template-columns: minmax(0, 200px) minmax(0, 1fr); gap: 6px 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+@media (max-width: 600px) { .fire { grid-template-columns: 1fr; } }
+.fire .page { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 600; overflow-wrap: anywhere; }
+.fire .rule { font-size: 0.88rem; color: var(--muted); }
+.fire .rule::before { content: "Rule: "; font-weight: 700; color: var(--claude); }
+.fire .out { grid-column: 1 / -1; font-family: var(--font-mono); font-size: 0.78rem; background: var(--code-bg); color: var(--code-fg); padding: 8px 10px; border-radius: 6px; overflow-x: auto; white-space: pre; }
+
+/* ROOM 4: graph */
+.graphwrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 280px); }
+@media (max-width: 860px) { .graphwrap { grid-template-columns: 1fr; } }
+.graph-main { padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.graph-ctrl { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-size: 0.92rem; }
+.graph-ctrl label { display: inline-flex; align-items: center; gap: 8px; }
+.graph-ctrl input[type="range"] { accent-color: var(--accent); width: 110px; }
+.graph-ctrl input[type="checkbox"] { accent-color: var(--accent); width: 17px; height: 17px; }
+.svgbox { overflow-x: auto; }
+svg.g { display: block; width: 100%; min-width: 560px; height: auto; }
+svg.g .edge { stroke: var(--line); stroke-width: 1.4; }
+svg.g .edge.idx { stroke-opacity: 0.55; stroke-width: 0.8; }
+svg.g .edge.ghost { stroke-dasharray: 3 5; stroke: var(--c-entity); stroke-opacity: 0.35; }
+svg.g .edge.hot { stroke: var(--accent); stroke-width: 2.2; stroke-opacity: 1; }
+svg.g .node { cursor: pointer; }
+svg.g .node text { font-family: var(--font-mono); font-size: 11px; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
+svg.g .node.ghost circle { fill: var(--surface) !important; stroke-dasharray: 3 3; }
+svg.g .node.ghost text { fill: var(--muted); }
+svg.g .node.fresh circle { stroke: var(--ink); stroke-width: 2.5; }
+svg.g .node.sel circle { stroke: var(--ink); stroke-width: 3; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.82rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.graph-side { border-left: 1px solid var(--line); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+@media (max-width: 860px) { .graph-side { border-left: 0; border-top: 1px solid var(--line); } }
+.stat { display: flex; justify-content: space-between; font-size: 0.9rem; border-bottom: 1px solid var(--line); padding-bottom: 6px; font-variant-numeric: tabular-nums; }
+.stat b { font-family: var(--font-mono); }
+.nodeinfo { display: flex; flex-direction: column; gap: 6px; font-size: 0.93rem; }
+.nodeinfo .path { font-family: var(--font-mono); font-size: 0.82rem; overflow-wrap: anywhere; }
+.events { font-size: 0.9rem; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+
+/* ROOM 5: tweak */
+.levers { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.94rem; min-width: 620px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td.k { font-weight: 700; white-space: nowrap; }
+.scope { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.builder { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+@media (max-width: 860px) { .builder { grid-template-columns: 1fr; } }
+.knobs { padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.knob { display: flex; flex-direction: column; gap: 6px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.knob:last-child { border-bottom: 0; padding-bottom: 0; }
+.knob-top { display: flex; align-items: flex-start; gap: 10px; }
+.knob-top input[type="checkbox"] { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--accent); flex: none; }
+.knob-top label { font-weight: 700; cursor: pointer; }
+.knob p { font-size: 0.9rem; color: var(--muted); padding-left: 28px; }
+.knob .sub { padding-left: 28px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 0.9rem; }
+.knob select, .knob input[type="number"] { font: inherit; font-size: 0.9rem; padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); }
+.knob input[type="number"] { width: 64px; }
+.output { border-left: 1px solid var(--line); padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+@media (max-width: 860px) { .output { border-left: 0; border-top: 1px solid var(--line); } }
+.code { position: relative; }
+.code pre { margin: 0; background: var(--code-bg); color: var(--code-fg); font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.55; padding: 40px 16px 16px; border-radius: 10px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.code .bar { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 8px 10px 0 16px; }
+.code .bar span { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--code-dim); }
+.copy { font-size: 0.78rem; font-weight: 600; border: 1px solid var(--code-dim); background: transparent; color: var(--code-fg); padding: 3px 10px; border-radius: 6px; cursor: pointer; }
+.copy:hover { background: var(--code-dim); color: var(--code-bg); }
+.effects { margin: 0; padding-left: 1.2em; font-size: 0.93rem; display: flex; flex-direction: column; gap: 4px; }
+.footer { color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--line); padding-top: 16px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="secbar"><nav aria-label="Sections">
+  <a href="#run">How it runs</a>
+  <a href="#folders">How folders appear</a>
+  <a href="#filling">What fills the pages</a>
+  <a href="#nodes">How nodes form</a>
+  <a href="#tweak">How to tweak it</a>
+</nav></div>
+
+<div class="wrap">
+<main>
+  <header class="hero">
+    <span class="eyebrow">Sterlite_wiki · under the hood</span>
+    <h1>What actually happens when you type "ingest"</h1>
+    <p class="lede">Your wiki has no hidden machinery. It is a folder of text files, one rulebook, and a Claude session that reads and writes those files when you ask. This page takes each moving part apart so you can see it, then shows where to change it.</p>
+    <div class="cast">
+      <span><i class="dot" style="background:var(--you)"></i><b>You</b>: choose sources, give instructions, approve</span>
+      <span><i class="dot" style="background:var(--claude)"></i><b>Claude</b>: reads and writes files</span>
+      <span><i class="dot" style="background:var(--obsidian)"></i><b>Obsidian</b>: displays the files, changes nothing</span>
+    </div>
+  </header>
+
+  <!-- ROOM 1 -->
+  <section class="room" id="run">
+    <div class="room-head">
+      <span class="q">Question 1 · how does it run?</span>
+      <h2>One ingest, step by step</h2>
+      <p class="prose">Click through a single ingest of a new concall transcript. Watch who acts at each step, which files get read and written, and how the session's memory (the context window you saw in your sidebar) fills up.</p>
+    </div>
+    <div class="panel run">
+      <ol class="stages" id="stages"></ol>
+      <div class="inspector" aria-live="polite">
+        <span class="who" id="inspWho"></span>
+        <h3 class="insp-title" id="inspTitle"></h3>
+        <p id="inspText"></p>
+        <div class="filelists">
+          <div><h4>Reads</h4><ul id="inspReads"></ul></div>
+          <div><h4>Writes</h4><ul id="inspWrites"></ul></div>
+        </div>
+        <div class="ctx">
+          <div class="ctx-row"><span>Session memory used (illustrative)</span><span id="ctxNum"></span></div>
+          <div class="ctx-bar"><span id="ctxBar"></span></div>
+        </div>
+        <p class="behind" id="inspBehind"></p>
+        <div class="controls">
+          <button class="btn" type="button" id="prevBtn">← Back</button>
+          <button class="btn primary" type="button" id="nextBtn">Next step →</button>
+        </div>
+      </div>
+    </div>
+    <div class="key"><b>The one thing to remember</b>Everything Claude reads stays in the session's memory until the session ends. One transcript adds roughly 100k. Ten ingests in one session gets you to the 900k+ you saw. The wiki files themselves never fill up, so a new session starts at almost zero and loses nothing.</div>
+  </section>
+
+  <!-- ROOM 2 -->
+  <section class="room" id="folders">
+    <div class="room-head">
+      <span class="q">Question 2 · how are folders created?</span>
+      <h2>CLAUDE.md is the blueprint; Claude does the building</h2>
+      <div class="prose">
+        <p>A folder is just a folder on your disk. Nobody creates folders automatically. In Step 7 of the setup you asked Claude to read the folder map in CLAUDE.md and build it, and Claude created each folder with a file-system command. Since then, Claude puts each new file wherever the map says that type of page belongs.</p>
+        <p>Click a line in the map to see the folder it produces.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="fold">
+        <div><span class="lbl">The map in CLAUDE.md</span><ul class="maplines" id="maplines"></ul></div>
+        <div><span class="lbl">What exists on your disk</span><ul class="ftree" id="ftree"></ul></div>
+      </div>
+      <p class="fold-explain" id="foldExplain"></p>
+    </div>
+    <div class="panel" style="padding:18px; display:flex; flex-direction:column; gap:12px">
+      <h3>Try it: add a folder</h3>
+      <p class="prose">Say you want a page per peer company. Type a folder name and see the two things you'd do: add a line to the map, then ask Claude to use it.</p>
+      <div class="adder"><label for="newFolder" class="lbl">New folder</label><input id="newFolder" type="text" value="wiki/peers" autocomplete="off"><button class="btn primary" type="button" id="addFolderBtn">Add to map</button></div>
+      <div class="code"><div class="bar"><span>1 · Add this line to CLAUDE.md, under Folders</span><button class="copy" type="button">Copy</button></div><pre id="addLine"></pre></div>
+      <div class="code"><div class="bar"><span>2 · Then tell Claude (new session)</span><button class="copy" type="button">Copy</button></div><pre id="addPrompt"></pre></div>
+    </div>
+    <div class="key"><b>If you rename or move a folder yourself</b>Update the map in CLAUDE.md the same day. Otherwise Claude follows the old map and recreates the old folder.</div>
+  </section>
+
+  <!-- ROOM 3 -->
+  <section class="room" id="filling">
+    <div class="room-head">
+      <span class="q">Question 3 · what drives the filling?</span>
+      <h2>Four inputs decide what gets written, and where</h2>
+    </div>
+    <div class="drivers">
+      <div class="driver"><h3>1 · The source</h3><p>What the document actually says. Claude can only write what's in it, and your rules tell it to cite the page.</p></div>
+      <div class="driver"><h3>2 · The rules</h3><p>CLAUDE.md tells Claude what to look for (numbers, promises, contradictions) and which page each kind of finding goes to.</p></div>
+      <div class="driver"><h3>3 · The existing wiki</h3><p>Claude reads the current pages first. Existing topic: update the page. New topic: create one. Disagreement: flag it.</p></div>
+      <div class="driver"><h3>4 · Your steering</h3><p>At the "wait for my OK" checkpoint you choose what to emphasise or skip. That's where your judgement goes in.</p></div>
+    </div>
+    <div class="prose"><p>Pick a document type to see which rules trigger and what each one writes. Obsidian, folder names and file names don't drive any of this. If a rule doesn't ask for something, it usually won't get written.</p></div>
+    <div class="tabs" role="tablist" id="srcTabs"></div>
+    <p class="illus">Illustrative excerpt and outputs, written to show the mechanics. These are not real figures from Sterlite's documents.</p>
+    <div class="excerpt" id="excerpt"></div>
+    <div class="fires" id="fires"></div>
+  </section>
+
+  <!-- ROOM 4 -->
+  <section class="room" id="nodes">
+    <div class="room-head">
+      <span class="q">Question 4 · how are nodes created?</span>
+      <h2>A node is a file. A line is a [[link]].</h2>
+      <div class="prose">
+        <p>Obsidian's graph has no data of its own. It draws one dot for every <code>.md</code> file and one line for every <code>[[wikilink]]</code> inside a file. So a new node appears exactly when Claude saves a new page, and a new line appears when Claude writes a link.</p>
+        <p>Below is a model of your wiki growing over four ingests. Change the entity threshold to see how the rule "create an entity page when a name appears on N pages" decides which names become nodes.</p>
+      </div>
+    </div>
+    <div class="panel graphwrap">
+      <div class="graph-main">
+        <div class="graph-ctrl">
+          <button class="btn primary" type="button" id="ingestBtn">Ingest next source</button>
+          <button class="btn" type="button" id="resetBtn">Reset</button>
+          <label for="thr"><span>Entity page at <b id="thrVal">5</b>+ pages</span> <input id="thr" type="range" min="2" max="8" value="5"></label>
+          <label for="ghost"><input id="ghost" type="checkbox" checked> Show names without a page</label>
+        </div>
+        <div class="svgbox"><svg class="g" id="graph" viewBox="0 0 900 520" role="img" aria-label="Graph of wiki pages and links"></svg></div>
+        <div class="legend" id="legend"></div>
+      </div>
+      <aside class="graph-side">
+        <div class="stat"><span>Sources ingested</span><b id="stIng">0 / 4</b></div>
+        <div class="stat"><span>Nodes (pages)</span><b id="stNodes">0</b></div>
+        <div class="stat"><span>Lines (links)</span><b id="stEdges">0</b></div>
+        <div class="stat"><span>Names waiting for a page</span><b id="stGhost">0</b></div>
+        <div class="events" id="events"></div>
+        <div class="nodeinfo" id="nodeinfo"><span class="lbl">Click any dot</span><p>See which file it is, when it was created and what links to it.</p></div>
+      </aside>
+    </div>
+    <p class="illus">A simplified model of your wiki for teaching. Your real graph has more pages.</p>
+    <div class="key"><b>Why some names never became pages</b>Without a threshold rule, Claude writes names as plain text, so nothing appears in the graph. Lint then reports them as "frequently mentioned names without a page", which is what happened with Lakshya, STL Digital, ICRA, Speedon and the US subsidiary. Adding the rule (see the next section) makes Claude create those pages during ingest.</div>
+  </section>
+
+  <!-- ROOM 5 -->
+  <section class="room" id="tweak">
+    <div class="room-head">
+      <span class="q">Question 5 · how do I tweak it?</span>
+      <h2>Five places you can change behaviour</h2>
+      <p class="prose">They differ in how long a change lasts. Use the top row for anything you want every time.</p>
+    </div>
+    <div class="panel levers">
+      <table>
+        <thead><tr><th>Where</th><th>Lasts</th><th>Use it for</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td class="k">CLAUDE.md</td><td><span class="scope">Every session</span></td><td>Rules, folder map, templates, workflows</td><td>"Create an entity page when a name appears on 5+ pages."</td></tr>
+          <tr><td class="k">Saved command</td><td><span class="scope">Every time you call it</span></td><td>A prompt you type often, saved as <code>/ingest</code></td><td>A file at <code>.claude/commands/ingest.md</code> in the vault</td></tr>
+          <tr><td class="k">Your prompt</td><td><span class="scope">This request</span></td><td>One-off variations</td><td>"Ingest this, but skip the CSR section."</td></tr>
+          <tr><td class="k">Checkpoint reply</td><td><span class="scope">This ingest</span></td><td>Emphasis after seeing the takeaways</td><td>"The impairment is the key point. Lead with it."</td></tr>
+          <tr><td class="k">Obsidian settings</td><td><span class="scope">Display only</span></td><td>How things look; never what Claude writes</td><td>Graph colours by folder, hiding <code>raw/</code> from the graph</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Build your tweaks</h3>
+    <p class="prose">Switch on the changes you want. The box on the right builds the exact text to paste at the end of your CLAUDE.md, plus a test prompt.</p>
+    <div class="panel builder">
+      <div class="knobs" id="knobs"></div>
+      <div class="output">
+        <div class="code"><div class="bar"><span>Paste at the end of CLAUDE.md</span><button class="copy" type="button">Copy</button></div><pre id="snippet"></pre></div>
+        <div><span class="lbl">What changes in the run</span><ul class="effects" id="effects"></ul></div>
+        <div class="code" id="cmdBox"><div class="bar"><span>Save as .claude/commands/ingest.md</span><button class="copy" type="button">Copy</button></div><pre id="cmdFile"></pre></div>
+        <div class="code"><div class="bar"><span>Test in a new session</span><button class="copy" type="button">Copy</button></div><pre id="testPrompt"></pre></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="footer">Companion to the LLM Wiki setup guide, based on Andrej Karpathy's <a href="https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f" target="_blank" rel="noopener">LLM Wiki gist</a>. Session-memory figures are rough illustrations; real numbers depend on document length.</p>
+</main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  var ACT = { you: ["You", "var(--you)"], claude: ["Claude", "var(--claude)"], obsidian: ["Obsidian", "var(--obsidian)"] };
+
+  /* ---------- ROOM 1: run-through ---------- */
+  var SRC = "raw/transcripts/2026-10-q2-fy27-concall.pdf";
+  var STAGES = [
+    { a: "you", t: "Save the PDF into raw/", x: "You download the transcript and save it into the transcripts folder. That's all. Nothing is watching the folder, so nothing happens yet.", r: [], w: [SRC], c: 0, b: "This is why the wiki never updates by itself. Saving a file is not an instruction." },
+    { a: "you", t: "Start a session, type the instruction", x: "You open a new Claude Code session on Sterlite_wiki and type: Ingest " + SRC, r: [], w: [], c: 0, b: "A new session starts with empty memory. That's good: it begins fast and cheap." },
+    { a: "claude", t: "Read the rulebook", x: "Before anything else, Claude Code loads CLAUDE.md automatically. Now it knows the folder map, the citation rules and the ingest checklist.", r: ["CLAUDE.md"], w: [], c: 14, b: "Built-in instructions plus your rulebook take up a small, fixed amount of memory in every session." },
+    { a: "claude", t: "Read the index", x: "Step 1 of the query and ingest workflows: read wiki/index.md to learn which pages exist, without opening all of them.", r: ["wiki/index.md"], w: [], c: 20, b: "The index is a table of contents, so Claude can find the right pages cheaply. Karpathy found this enough for a few hundred pages." },
+    { a: "claude", t: "Read the source, in parts", x: "Claude reads the transcript section by section until it has covered all of it, as CLAUDE.md asks for long files.", r: [SRC], w: [], c: 95, b: "This is the biggest cost. A 40-page transcript can add 60–80k; a 300-page annual report several times that." },
+    { a: "claude", t: "Report takeaways and wait", x: "Claude lists the 5–8 key takeaways and anything surprising, then stops, because your rule says 'Wait for my OK'.", r: [], w: [], c: 98, b: "The checkpoint is your steering wheel. Reply with what matters most, or what to ignore." },
+    { a: "you", t: "Approve and steer", x: "You reply: 'OK. Treat the impairment as the main story, and check the margin guidance against last quarter.'", r: [], w: [], c: 99, b: "Your reply becomes part of the instructions for this ingest only." },
+    { a: "claude", t: "Read the pages it will change", x: "Claude opens the pages this source affects, so it can update them without contradicting or duplicating what's there.", r: ["wiki/overview.md", "wiki/analysis/guidance-tracker.md", "wiki/company/segments.md", "wiki/entities/speedon-network.md", "wiki/sources/src-2026-08-q1-fy27-concall.md"], w: [], c: 122, b: "This is how the existing wiki shapes the result. New information gets merged with old, not written in isolation." },
+    { a: "claude", t: "Write and edit pages", x: "Claude creates the source page, then edits each affected page. In Claude Code you'll see a permission prompt per file unless you allowed edits for the session.", r: [], w: ["wiki/sources/src-2026-10-q2-fy27-concall.md (new)", "wiki/analysis/guidance-tracker.md", "wiki/company/segments.md", "wiki/overview.md", "wiki/timeline.md", "wiki/analysis/open-questions.md"], c: 134, b: "Each edit is a normal file save. A new file means a new node in Obsidian's graph." },
+    { a: "claude", t: "Update index and log", x: "Claude adds the new page to index.md and appends a dated entry to log.md listing every page it touched.", r: ["wiki/index.md", "wiki/log.md"], w: ["wiki/index.md", "wiki/log.md"], c: 137, b: "The log is how a future session (or you) can see what changed, without the old session's memory." },
+    { a: "obsidian", t: "Obsidian shows the changes", x: "Obsidian notices the files changed and refreshes. New pages appear in the sidebar; new links appear in the graph and in Backlinks.", r: ["(all files in the vault)"], w: [], c: 137, b: "Obsidian is a viewer. It didn't take part in the ingest and can't trigger one." }
+  ];
+  var cur = 0, CTX_MAX = 1000;
+  var stagesEl = $("stages");
+  STAGES.forEach(function (s, i) {
+    var li = el("li"), b = el("button"); b.type = "button";
+    var n = el("span", "n", String(i + 1).padStart(2, "0"));
+    var d = el("i", "dot"); d.style.background = ACT[s.a][1];
+    b.appendChild(n); b.appendChild(d); b.appendChild(el("span", null, s.t));
+    b.addEventListener("click", function () { cur = i; drawStage(); });
+    li.appendChild(b); stagesEl.appendChild(li);
+  });
+  function fillList(ul, items, empty) {
+    ul.innerHTML = "";
+    if (!items.length) { ul.appendChild(el("li", "none", empty)); return; }
+    items.forEach(function (f) { ul.appendChild(el("li", null, f)); });
+  }
+  function drawStage() {
+    var s = STAGES[cur];
+    stagesEl.querySelectorAll("button").forEach(function (b, i) {
+      if (i === cur) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
+      b.classList.toggle("past", i < cur);
+    });
+    var who = $("inspWho"); who.innerHTML = ""; var d = el("i", "dot"); d.style.background = ACT[s.a][1];
+    who.appendChild(d); who.appendChild(document.createTextNode(ACT[s.a][0] + " · step " + (cur + 1) + " of " + STAGES.length)); who.style.color = ACT[s.a][1];
+    $("inspTitle").textContent = s.t; $("inspText").textContent = s.x; $("inspBehind").textContent = s.b;
+    fillList($("inspReads"), s.r, "Nothing"); fillList($("inspWrites"), s.w, "Nothing");
+    $("ctxNum").textContent = "≈ " + s.c + "k of " + CTX_MAX / 1000 + "M";
+    $("ctxBar").style.width = Math.max(0.5, s.c / CTX_MAX * 100) + "%";
+    $("prevBtn").disabled = cur === 0;
+    $("nextBtn").textContent = cur === STAGES.length - 1 ? "Start over" : "Next step →";
+  }
+  $("prevBtn").addEventListener("click", function () { if (cur > 0) { cur--; drawStage(); } });
+  $("nextBtn").addEventListener("click", function () { cur = cur === STAGES.length - 1 ? 0 : cur + 1; drawStage(); });
+  drawStage();
+
+  /* ---------- ROOM 2: folders ---------- */
+  var MAP = [
+    { line: "- raw/ — source documents. READ ONLY.", f: "raw/", who: "Created by Claude in setup Step 7. You add files; Claude only reads them." },
+    { line: "  - raw/filings/ — annual reports, results…", f: "raw/filings/", who: "Created in setup. Your annual reports, results and rating reports go here." },
+    { line: "  - raw/transcripts/ — earnings call transcripts", f: "raw/transcripts/", who: "Created in setup. Concall transcripts." },
+    { line: "  - raw/presentations/ — investor presentations", f: "raw/presentations/", who: "Created in setup. Investor decks." },
+    { line: "  - raw/news/ — articles clipped from the web", f: "raw/news/", who: "Created in setup. The Web Clipper saves here because you set its note location." },
+    { line: "- wiki/ — you own this folder.", f: "wiki/", who: "Created in setup. Everything inside is written by Claude." },
+    { line: "  - wiki/sources/ — one page per source", f: "wiki/sources/", who: "Claude saves one src-… page here at every ingest (ingest step 3)." },
+    { line: "  - wiki/company/ — business-model, segments…", f: "wiki/company/", who: "Claude saves core company pages here; the map lists which ones." },
+    { line: "  - wiki/entities/ — people, competitors…", f: "wiki/entities/", who: "Claude saves a page here when a person or organisation earns one (see the threshold rule in section 4)." },
+    { line: "  - wiki/concepts/ — industry concepts", f: "wiki/concepts/", who: "Claude saves explainer pages here, e.g. optical-fibre-cable.md." },
+    { line: "  - wiki/analysis/ — thesis, risks, tracker…", f: "wiki/analysis/", who: "Thinking pages, plus any answer you ask Claude to save after a query." }
+  ];
+  var TREE = ["CLAUDE.md", "raw/", "raw/filings/", "raw/transcripts/", "raw/presentations/", "raw/news/", "wiki/", "wiki/index.md", "wiki/log.md", "wiki/overview.md", "wiki/sources/", "wiki/company/", "wiki/entities/", "wiki/concepts/", "wiki/analysis/"];
+  var extraFolders = [];
+  var sel = 6;
+  function drawFolders() {
+    var ml = $("maplines"); ml.innerHTML = "";
+    MAP.forEach(function (m, i) {
+      var li = el("li"), b = el("button", i === sel ? "hl" : "", m.line); b.type = "button";
+      b.addEventListener("click", function () { sel = i; drawFolders(); });
+      li.appendChild(b); ml.appendChild(li);
+    });
+    var ft = $("ftree"); ft.innerHTML = "";
+    var all = TREE.concat(extraFolders.map(function (x) { return x.f; }));
+    var target = MAP[sel] ? MAP[sel].f : null;
+    all.forEach(function (p) {
+      var depth = (p.replace(/\/$/, "").match(/\//g) || []).length;
+      var name = p.replace(/\/$/, "").split("/").pop() + (p.slice(-1) === "/" ? "/" : "");
+      var isNew = extraFolders.some(function (x) { return x.f === p; });
+      var li = el("li"), b = el("button", (depth ? "d1 " : "") + (p === target ? "hl " : "") + (isNew ? "new" : ""), (p.slice(-1) === "/" ? "▸ " : "· ") + name); b.type = "button";
+      b.addEventListener("click", function () { var k = -1; MAP.forEach(function (m, i) { if (m.f === p) k = i; }); if (k >= 0) { sel = k; drawFolders(); } });
+      li.appendChild(b); ft.appendChild(li);
+    });
+    $("foldExplain").textContent = MAP[sel] ? MAP[sel].f + " · " + MAP[sel].who : "";
+  }
+  function normFolder(v) {
+    v = (v || "").trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/[^A-Za-z0-9_\-\/]/g, "-").toLowerCase();
+    if (!v) v = "wiki/peers";
+    if (!/^(wiki|raw)\//.test(v)) v = "wiki/" + v;
+    return v.replace(/\/+$/, "") + "/";
+  }
+  function drawAdder() {
+    var f = normFolder($("newFolder").value);
+    var base = f.replace(/\/$/, "").split("/").pop();
+    $("addLine").textContent = "  - `" + f + "` — one page per " + base.replace(/s$/, "") + " (describe what belongs here)";
+    $("addPrompt").textContent = "I added " + f + " to the folder map in CLAUDE.md. Create the folder, then read wiki/index.md and move or create the pages that belong there. Update every [[link]] that points to a moved page, and update the index and log. Show me the plan before you change anything.";
+  }
+  $("newFolder").addEventListener("input", drawAdder);
+  $("addFolderBtn").addEventListener("click", function () {
+    var f = normFolder($("newFolder").value);
+    if (TREE.indexOf(f) < 0 && !extraFolders.some(function (x) { return x.f === f; })) {
+      extraFolders.push({ f: f });
+      MAP.push({ line: "  - " + f + " — (your new line)", f: f, who: "Exists only after you add the line AND ask Claude to create it. Adding the line alone builds nothing." });
+      sel = MAP.length - 1;
+    }
+    drawFolders(); drawAdder();
+  });
+  drawFolders(); drawAdder();
+
+  /* ---------- ROOM 3: drivers ---------- */
+  var SOURCES = {
+    concall: {
+      label: "Concall transcript",
+      ex: "p.6  CEO: \"We expect the optical connectivity business to reach double-digit\n      EBITDA margins by Q4 FY27 as the new capacity comes on line.\"\np.9  CFO: \"The impairment in Speedon Network this quarter is a one-time item.\"",
+      fires: [
+        { p: "wiki/analysis/guidance-tracker.md", r: "Add every forward-looking statement to the guidance tracker.", o: "| 2026-10-28 | CEO | Double-digit EBITDA margin, optical connectivity | Q4 FY27 | Open | [[src-2026-10-q2-fy27-concall]] p.6 |" },
+        { p: "wiki/analysis/open-questions.md", r: "If a new source contradicts a page, flag it; don't overwrite.", o: "> [!warning] Contradiction\n> Q1 call said double-digit margins by Q2 FY27 ([[src-2026-08-q1-fy27-concall]] p.5).\n> Q2 call now says Q4 FY27 ([[src-2026-10-q2-fy27-concall]] p.6). Deadline moved by two quarters." },
+        { p: "wiki/entities/speedon-network.md", r: "Write management statements as claims, not facts.", o: "Management says the Q2 FY27 impairment is a one-time item ([[src-2026-10-q2-fy27-concall]] p.9)." },
+        { p: "wiki/timeline.md", r: "Ingest step 4: update timeline.md.", o: "- 2026-10-28 · Q2 FY27 call. Margin target pushed to Q4 FY27; Speedon impairment. [[src-2026-10-q2-fy27-concall]]" }
+      ]
+    },
+    rating: {
+      label: "Credit rating rationale",
+      ex: "p.1  \"The rating reflects the company's established position in optical fibre\n      cables, tempered by a stretched working capital cycle.\"\np.3  Rating outlook: Stable.",
+      fires: [
+        { p: "wiki/analysis/risks.md", r: "Ingest step 4: update every affected analysis page.", o: "- Working capital: the rating agency calls the cycle stretched ([[src-2026-09-crisil-rating-rationale]] p.1)." },
+        { p: "wiki/company/financials.md", r: "Keep facts and opinion apart (\"What the company reports\" / \"Our read\").", o: "## What the company reports\n...\n## Our read\n(left for you; the rule stops Claude writing opinion here unasked)" },
+        { p: "wiki/entities/crisil.md", r: "One page per organisation that matters.", o: "Mentioned on 1 more page → count rises toward the entity threshold." },
+        { p: "wiki/log.md", r: "Ingest step 7: append to log.md.", o: "## [2026-09-20] ingest | CRISIL rating rationale\n- created: sources/src-2026-09-crisil-rating-rationale\n- updated: risks, financials, timeline, index" }
+      ]
+    },
+    news: {
+      label: "News article",
+      ex: "\"The company has won an order worth about ₹1,000 crore from a European\ntelecom operator, according to people familiar with the matter.\"",
+      fires: [
+        { p: "wiki/timeline.md", r: "Cite every claim. (With the source-quality tweak: label third-party sources.)", o: "- 2026-10-12 · Reported European telecom order, ~₹1,000 cr (reported by news outlet, unconfirmed). [[src-2026-10-order-news]]" },
+        { p: "wiki/analysis/open-questions.md", r: "Never invent numbers; set confidence low when unsure.", o: "- Is the ~₹1,000 cr European order confirmed in an exchange filing? (confidence: low)" },
+        { p: "wiki/company/financials.md", r: "(no rule fires)", o: "Not touched. No rule tells Claude to put news numbers into financials, so it doesn't." }
+      ]
+    }
+  };
+  var curSrc = "concall";
+  var tabs = $("srcTabs");
+  Object.keys(SOURCES).forEach(function (k) {
+    var b = el("button", null, SOURCES[k].label); b.type = "button"; b.setAttribute("role", "tab");
+    b.addEventListener("click", function () { curSrc = k; drawSrc(); });
+    b.dataset.k = k; tabs.appendChild(b);
+  });
+  function drawSrc() {
+    tabs.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.k === curSrc)); });
+    var s = SOURCES[curSrc];
+    $("excerpt").textContent = s.ex;
+    var f = $("fires"); f.innerHTML = "";
+    s.fires.forEach(function (x) {
+      var d = el("div", "fire");
+      d.appendChild(el("div", "page", x.p)); d.appendChild(el("div", "rule", x.r)); d.appendChild(el("div", "out", x.o));
+      f.appendChild(d);
+    });
+  }
+  drawSrc();
+
+  /* ---------- ROOM 4: graph ---------- */
+  var TYPES = { hub: "Index & overview", source: "Source pages", company: "Company pages", analysis: "Analysis pages", concept: "Concepts", entity: "Entities" };
+  var INGESTS = ["FY26 annual report", "Q1 FY27 concall", "CRISIL rating rationale", "Q2 FY27 concall"];
+  var P = {
+    "index": { t: "hub", x: 450, y: 265, b: 0, f: "wiki/index.md" },
+    "overview": { t: "hub", x: 450, y: 165, b: 0, f: "wiki/overview.md", l: ["business-model", "segments", "financials", "thesis", "risks", "timeline"] },
+    "timeline": { t: "analysis", x: 610, y: 95, b: 0, f: "wiki/timeline.md" },
+    "thesis": { t: "analysis", x: 735, y: 130, b: 0, f: "wiki/analysis/thesis.md", l: ["risks", "valuation"] },
+    "risks": { t: "analysis", x: 790, y: 215, b: 0, f: "wiki/analysis/risks.md" },
+    "open-questions": { t: "analysis", x: 760, y: 300, b: 0, f: "wiki/analysis/open-questions.md" },
+    "guidance-tracker": { t: "analysis", x: 680, y: 375, b: 0, f: "wiki/analysis/guidance-tracker.md" },
+    "src-ar-fy26": { t: "source", x: 85, y: 320, b: 1, f: "wiki/sources/src-2026-05-annual-report-fy26.md", l: ["business-model", "segments", "financials", "management", "risks", "optical-fibre-cable"] },
+    "business-model": { t: "company", x: 215, y: 75, b: 1, f: "wiki/company/business-model.md", l: ["optical-fibre-cable"] },
+    "segments": { t: "company", x: 330, y: 55, b: 1, f: "wiki/company/segments.md" },
+    "financials": { t: "company", x: 165, y: 170, b: 1, f: "wiki/company/financials.md" },
+    "management": { t: "company", x: 290, y: 150, b: 1, f: "wiki/company/management.md" },
+    "optical-fibre-cable": { t: "concept", x: 470, y: 40, b: 1, f: "wiki/concepts/optical-fibre-cable.md" },
+    "src-q1-concall": { t: "source", x: 120, y: 420, b: 2, f: "wiki/sources/src-2026-08-q1-fy27-concall.md", l: ["guidance-tracker", "segments", "management", "timeline"] },
+    "src-crisil": { t: "source", x: 225, y: 480, b: 3, f: "wiki/sources/src-2026-09-crisil-rating-rationale.md", l: ["financials", "risks", "open-questions"] },
+    "src-q2-concall": { t: "source", x: 360, y: 495, b: 4, f: "wiki/sources/src-2026-10-q2-fy27-concall.md", l: ["guidance-tracker", "segments", "valuation", "timeline", "open-questions", "order-book"] },
+    "valuation": { t: "company", x: 120, y: 245, b: 4, f: "wiki/company/valuation.md" },
+    "order-book": { t: "concept", x: 860, y: 60, b: 4, f: "wiki/concepts/order-book.md" }
+  };
+  // Entities: which pages mention them, by ingest. Count of mentioning pages drives the threshold rule.
+  var E = {
+    "lakshya": { x: 500, y: 415, f: "wiki/entities/lakshya.md", m: { 1: ["src-ar-fy26", "overview"], 2: ["src-q1-concall", "guidance-tracker"], 4: ["src-q2-concall", "thesis"] } },
+    "stl-digital": { x: 270, y: 330, f: "wiki/entities/stl-digital.md", m: { 1: ["src-ar-fy26", "segments", "financials"], 4: ["src-q2-concall", "valuation"] } },
+    "icra": { x: 380, y: 400, f: "wiki/entities/icra.md", m: { 1: ["financials"], 3: ["src-crisil", "risks", "open-questions"], 4: ["src-q2-concall"] } },
+    "speedon-network": { x: 590, y: 470, f: "wiki/entities/speedon-network.md", m: { 2: ["src-q1-concall", "segments"], 4: ["src-q2-concall", "open-questions", "risks"] } },
+    "prysmian": { x: 590, y: 300, f: "wiki/entities/prysmian.md", m: { 1: ["src-ar-fy26", "risks"], 2: ["src-q1-concall", "open-questions"], 4: ["src-q2-concall", "timeline"] } },
+    "sterlite-inc": { x: 820, y: 455, f: "wiki/entities/sterlite-technologies-inc.md", m: { 1: ["src-ar-fy26"], 2: ["src-q1-concall"], 4: ["src-q2-concall", "prysmian"] } }
+  };
+  var ing = 0, selNode = null, lastEvents = [];
+  function mentions(id, upto) {
+    var out = [];
+    Object.keys(E[id].m).forEach(function (k) { if (+k <= upto) out = out.concat(E[id].m[k]); });
+    return out;
+  }
+  function entityBorn(id, thr) {
+    // the page is created at the first ingest where the mention count reaches the threshold
+    for (var i = 1; i <= 4; i++) if (mentions(id, i).length >= thr) return i;
+    return 99;
+  }
+  function model() {
+    var thr = +$("thr").value, ghost = $("ghost").checked;
+    var nodes = {}, edges = [];
+    Object.keys(P).forEach(function (k) { if (P[k].b <= ing) nodes[k] = { id: k, t: P[k].t, x: P[k].x, y: P[k].y, f: P[k].f, born: P[k].b, ghost: false }; });
+    Object.keys(E).forEach(function (k) {
+      var ms = mentions(k, ing); if (!ms.length) return;
+      var born = entityBorn(k, thr), real = born <= ing;
+      if (!real && !ghost) return;
+      nodes[k] = { id: k, t: "entity", x: E[k].x, y: E[k].y, f: E[k].f, born: born, ghost: !real, count: ms.length };
+    });
+    Object.keys(P).forEach(function (k) {
+      if (!nodes[k]) return;
+      (P[k].l || []).forEach(function (to) { if (nodes[to] && !nodes[to].ghost) edges.push({ a: k, b: to }); });
+    });
+    Object.keys(E).forEach(function (k) {
+      if (!nodes[k]) return;
+      mentions(k, ing).forEach(function (from) { if (nodes[from] && !nodes[from].ghost) edges.push({ a: from, b: k, ghost: nodes[k].ghost }); });
+    });
+    Object.keys(nodes).forEach(function (k) { if (k !== "index" && !nodes[k].ghost) edges.push({ a: "index", b: k, idx: true }); });
+    return { nodes: nodes, edges: edges, thr: thr };
+  }
+  var NS = "http://www.w3.org/2000/svg";
+  function sv(tag, attrs) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }
+  function drawGraph() {
+    var m = model(), svg = $("graph"); svg.innerHTML = "";
+    var gE = sv("g", {}), gN = sv("g", {}); svg.appendChild(gE); svg.appendChild(gN);
+    var realEdges = 0, ghosts = 0, realNodes = 0;
+    m.edges.forEach(function (e) {
+      var A = m.nodes[e.a], B = m.nodes[e.b];
+      var hot = selNode && (e.a === selNode || e.b === selNode) && !e.idx;
+      gE.appendChild(sv("line", { x1: A.x, y1: A.y, x2: B.x, y2: B.y, "class": "edge" + (e.idx ? " idx" : "") + (e.ghost ? " ghost" : "") + (hot ? " hot" : "") }));
+      if (!e.ghost) realEdges++;
+    });
+    Object.keys(m.nodes).forEach(function (k) {
+      var n = m.nodes[k];
+      if (n.ghost) ghosts++; else realNodes++;
+      var r = n.t === "hub" ? 13 : n.t === "source" ? 9 : 8;
+      var g = sv("g", { "class": "node" + (n.ghost ? " ghost" : "") + (n.born === ing && ing > 0 && !n.ghost ? " fresh" : "") + (selNode === k ? " sel" : ""), tabindex: "0", role: "button", "aria-label": k });
+      g.appendChild(sv("circle", { cx: n.x, cy: n.y, r: r, fill: "var(--c-" + n.t + ")", stroke: "var(--c-" + n.t + ")", "stroke-width": n.ghost ? 1.5 : 0 }));
+      var anchor = n.x > 780 ? "end" : n.x < 120 ? "start" : "middle";
+      var tx = sv("text", { x: n.x, y: n.y - r - 5, "text-anchor": anchor }); tx.textContent = k + (n.ghost ? " (" + n.count + ")" : "");
+      g.appendChild(tx);
+      function pick() { selNode = selNode === k ? null : k; drawGraph(); }
+      g.addEventListener("click", pick);
+      g.addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); pick(); } });
+      gN.appendChild(g);
+    });
+    $("stIng").textContent = ing + " / 4"; $("stNodes").textContent = realNodes; $("stEdges").textContent = realEdges; $("stGhost").textContent = ghosts;
+    $("thrVal").textContent = m.thr;
+    $("ingestBtn").disabled = ing >= 4;
+    $("ingestBtn").textContent = ing >= 4 ? "All 4 ingested" : "Ingest: " + INGESTS[ing];
+    var ev = $("events"); ev.innerHTML = "";
+    ev.appendChild(el("span", "lbl", ing === 0 ? "State after setup (Step 7)" : "Last ingest: " + INGESTS[ing - 1]));
+    if (ing === 0) ev.appendChild(el("span", null, "Starter pages only, all linked from index.md. No sources yet."));
+    else {
+      var fresh = Object.keys(m.nodes).filter(function (k) { return m.nodes[k].born === ing && !m.nodes[k].ghost; });
+      ev.appendChild(el("span", null, "New pages (outlined): " + (fresh.length ? fresh.join(", ") : "none")));
+    }
+    drawInfo(m);
+  }
+  function drawInfo(m) {
+    var box = $("nodeinfo"); box.innerHTML = "";
+    if (!selNode || !m.nodes[selNode]) { box.appendChild(el("span", "lbl", "Click any dot")); box.appendChild(el("p", null, "See which file it is, when it was created and what links to it.")); return; }
+    var n = m.nodes[selNode];
+    box.appendChild(el("span", "lbl", TYPES[n.t]));
+    box.appendChild(el("span", "path", n.f));
+    var inc = m.edges.filter(function (e) { return e.b === selNode && !e.ghost; }).length;
+    var out = m.edges.filter(function (e) { return e.a === selNode; }).length;
+    if (n.ghost) {
+      box.appendChild(el("p", null, "No file yet. The name appears as plain text on " + n.count + " page(s). Your rule creates a page at " + m.thr + "+, so this stays a name, not a node. Lint would list it as a candidate."));
+    } else {
+      box.appendChild(el("p", null, n.born === 0 ? "Created during setup (Step 7)." : "Created during ingest " + n.born + ": " + INGESTS[n.born - 1] + "."));
+      box.appendChild(el("p", null, inc + " link(s) in, " + out + " link(s) out."));
+      if (n.t === "entity") box.appendChild(el("p", null, "Mentioned on " + n.count + " page(s), which met the threshold of " + m.thr + "."));
+    }
+  }
+  var leg = $("legend");
+  Object.keys(TYPES).forEach(function (t) { var s = el("span"); var d = el("i", "dot"); d.style.background = "var(--c-" + t + ")"; s.appendChild(d); s.appendChild(document.createTextNode(TYPES[t])); leg.appendChild(s); });
+  var gs = el("span"); var gd = el("i", "dot"); gd.style.border = "1.5px dashed var(--muted)"; gs.appendChild(gd); gs.appendChild(document.createTextNode("Name without a page (count)")); leg.appendChild(gs);
+  $("ingestBtn").addEventListener("click", function () { if (ing < 4) { ing++; drawGraph(); } });
+  $("resetBtn").addEventListener("click", function () { ing = 0; selNode = null; drawGraph(); });
+  $("thr").addEventListener("input", drawGraph);
+  $("ghost").addEventListener("change", drawGraph);
+  ing = 2; drawGraph();
+
+  /* ---------- ROOM 5: tweak builder ---------- */
+  var KNOBS = [
+    { id: "kEntity", on: true, title: "Create entity pages automatically", desc: "Stops names piling up for lint to find.", sub: function () { return "<label for='kEntityN'>Threshold</label> <input type='number' id='kEntityN' min='2' max='10' value='5'> pages"; },
+      rule: function () { var n = val("kEntityN", 5); return "- Entity pages: when a person, company or project is mentioned on " + n + " or more wiki pages, create its page in wiki/entities/ during the ingest and link every mention to it. List new entity pages in your summary."; },
+      eff: function () { return "Ingest step 4 creates entity pages; new dots appear in the graph immediately."; } },
+    { id: "kQuality", on: true, title: "Label source quality", desc: "Your Q2 FY27 transcript was a third-party machine transcript.",
+      rule: function () { return "- Source quality: add `quality: official | third-party | machine-transcript | news` to every source page's frontmatter. When sources disagree, prefer official over third-party, and say so."; },
+      eff: function () { return "Every source page gets a quality tag; contradictions say which source wins and why."; } },
+    { id: "kCheckpoint", on: false, title: "Lighter checkpoint for news", desc: "Skip the wait for low-stakes sources.", sub: function () { return "<label for='kCheckpointT'>Write without waiting for</label> <select id='kCheckpointT'><option>news articles</option><option>news articles and rating reports</option></select>"; },
+      rule: function () { return "- Checkpoint: for " + val("kCheckpointT", "news articles") + ", skip the 'wait for my OK' step and write the pages directly. Still show me the takeaways in your summary. Always wait for my OK on filings and transcripts."; },
+      eff: function () { return "Ingest step 2 is skipped for the chosen source types; faster, less control."; } },
+    { id: "kSession", on: true, title: "Session-length reminder", desc: "Avoids the 900k+ memory problem.", sub: function () { return "<label for='kSessionN'>Remind me after</label> <input type='number' id='kSessionN' min='1' max='6' value='2'> ingests"; },
+      rule: function () { return "- Sessions: after every " + val("kSessionN", 2) + " ingests in one session, end your summary with: \"Good time to start a new session.\""; },
+      eff: function () { return "Claude reminds you to start fresh; session memory stays small."; } },
+    { id: "kPeers", on: false, title: "Track peers", desc: "Adds a running comparison table.", sub: function () { return "<label for='kPeersL'>Peers</label> <input type='text' id='kPeersL' value='HFCL, Prysmian, Corning' style='font:inherit;font-size:.9rem;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);min-width:0;flex:1 1 160px'>"; },
+      rule: function () { return "- Peers: whenever a source mentions " + val("kPeersL", "HFCL, Prysmian, Corning") + ", add a row to wiki/analysis/peer-tracker.md (date, peer, what was said, source). Create the file if it doesn't exist."; },
+      eff: function () { return "A new page, peer-tracker.md, starts filling on every ingest that mentions a peer."; } },
+    { id: "kCmd", on: true, title: "Save /ingest as a command", desc: "Type /ingest <file> instead of the full instruction.",
+      rule: null, eff: function () { return "Typing /ingest raw/transcripts/<file> runs your saved prompt with that file."; } }
+  ];
+  function val(id, d) { var e = $(id); return e && e.value !== "" ? e.value : d; }
+  var knobsEl = $("knobs");
+  KNOBS.forEach(function (k) {
+    var box = el("div", "knob");
+    var top = el("div", "knob-top");
+    var cb = el("input"); cb.type = "checkbox"; cb.id = k.id; cb.checked = k.on;
+    var lb = el("label", null, k.title); lb.htmlFor = k.id;
+    top.appendChild(cb); top.appendChild(lb); box.appendChild(top);
+    box.appendChild(el("p", null, k.desc));
+    if (k.sub) { var s = el("div", "sub"); s.innerHTML = k.sub(); box.appendChild(s); }
+    knobsEl.appendChild(box);
+  });
+  knobsEl.addEventListener("input", drawSnippet);
+  knobsEl.addEventListener("change", drawSnippet);
+  function drawSnippet() {
+    var rules = [], effs = [];
+    KNOBS.forEach(function (k) {
+      if (!$(k.id).checked) return;
+      if (k.rule) rules.push(k.rule());
+      effs.push(k.eff());
+    });
+    $("snippet").textContent = rules.length ? "## My tweaks\n\n" + rules.join("\n\n") : "(Switch on a rule on the left.)";
+    var ef = $("effects"); ef.innerHTML = "";
+    if (!effs.length) ef.appendChild(el("li", null, "Nothing changes; the default workflow runs."));
+    effs.forEach(function (t) { ef.appendChild(el("li", null, t)); });
+    var cmdOn = $("kCmd").checked;
+    $("cmdBox").hidden = !cmdOn;
+    $("cmdFile").textContent = "Ingest $ARGUMENTS\n\nFollow the ingest workflow in CLAUDE.md, including the rules under \"My tweaks\".\nShow me the key takeaways first.";
+    $("testPrompt").textContent = "Read CLAUDE.md. Summarise the rules under \"My tweaks\" in one line each, and tell me if any of them conflict with the rest of the file. Don't change anything." + (cmdOn ? "\n\nThen I'll run: /ingest raw/news/<a news file>" : "");
+  }
+  drawSnippet();
+
+  /* ---------- copy + section bar ---------- */
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest(".copy"); if (!btn) return;
+    var pre = btn.closest(".code").querySelector("pre"), text = pre.textContent;
+    function done(ok) { btn.textContent = ok ? "Copied" : "Select & copy"; setTimeout(function () { btn.textContent = "Copy"; }, 1600); }
+    function fallback() { var r = document.createRange(); r.selectNodeContents(pre); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); var ok = false; try { ok = document.execCommand("copy"); } catch (x) {} done(ok); }
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, fallback); else fallback(); } catch (x) { fallback(); }
+  });
+  var links = document.querySelectorAll(".secbar a");
+  function spy() {
+    var y = window.scrollY + 120, on = null;
+    links.forEach(function (a) { var s = document.querySelector(a.getAttribute("href")); if (s && s.offsetTop <= y) on = a; });
+    links.forEach(function (a) { a.classList.toggle("on", a === on); });
+  }
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+})();
+</script>

@@ -8,3 +8,4 @@ Author - Gaurav Chandak
 
 - `guide.html`: interactive step-by-step setup guide
 - `CLAUDE.md`: the schema (rulebook) template to drop into your Obsidian vault
+- `how-it-runs.html`: interactive explainer of how an ingest runs, how folders and graph nodes appear, and how to tweak the workflow
